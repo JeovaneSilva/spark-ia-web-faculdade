@@ -4,7 +4,7 @@ function App() {
 
   return (
     <>
-      <p className="text-3xl">Spark.ia Aquiii</p>
+      <p className="text-3xl color text-content-secondary">Spark.ia Aquiii</p>
     </>
   );
 }

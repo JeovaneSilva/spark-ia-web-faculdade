@@ -1,70 +1,76 @@
 @import "tailwindcss";
 
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@theme {
+  /* Cores de Background */
+  --color-brand-background: #0B2A3B;
+  --color-brand-card: #113D56;
+  --color-brand-sidebar: #0A2333;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  /* Cores de Ação */
+  --color-brand-orange: #FF7A00;
+  --color-brand-orange-hover: #E66C00;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+  /* Cores de Estado */
+  --color-status-success: #2ECC71;
+  --color-status-error: #E74C3C;
+  --color-status-warning: #F1C40F;
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
+  /* Cores de Texto */
+  --color-content-primary: #FFFFFF;
+  --color-content-secondary: #B0BEC5;
+  --color-content-disabled: #607D8B;
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  /* Bordas */
+  --radius-card: 16px;
+  --radius-input: 12px;
+  --radius-button: 12px;
+
+  /* Fontes */
+  --font-inter: "Inter", sans-serif;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
+/* 2. APLICAÇÃO DOS ESTILOS BASE */
+@layer base {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    color-scheme: dark;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    /* Agora o Tailwind reconhece a variável definida acima */
+    background-color: var(--color-brand-background);
+    color: var(--color-content-primary);
+    font-family: var(--font-inter);
+  }
+
+  h1 { 
+    font-size: 32px; 
+    font-weight: 700; 
+    line-height: 1.2; 
+  }
+  
+  h2 { 
+    font-size: 24px; 
+    font-weight: 600; 
+  }
+  
+  h3 { 
+    font-size: 20px; 
+    font-weight: 600; 
+  }
+
+  a {
+    color: var(--color-brand-orange);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
   a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
+    color: var(--color-brand-orange-hover);
   }
 }
