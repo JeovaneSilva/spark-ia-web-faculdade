@@ -1,25 +1,53 @@
+import { Route, Routes } from "react-router-dom";
+import { AuthProvider } from "./features/auth/AuthProvider";
+import { RequireAuth } from "./features/auth/RequireAuth";
+import { LoginPage } from "./features/auth/LoginPage";
+import { SignupPage } from "./features/auth/SignupPage";
+import { LandingPage } from "./features/landing/LandingPage";
 import { DashboardLayout } from "./layouts/DashboardLayout";
-import { Card } from "./components/ui/Card";
-import { Button } from "./components/ui/Button";
+import { DashboardHomePage } from "./features/dashboard/DashboardHomePage";
+import { ChatbotPage } from "./features/chatbot/ChatbotPage";
+import { FlashcardsPage } from "./features/flashcards/FlashcardsPage";
+import { FlashcardSubjectPage } from "./features/flashcards/FlashcardSubjectPage";
+import { QuestionsPage } from "./features/questions/QuestionsPage";
+import { QuestionDetailPage } from "./features/questions/QuestionDetailPage";
+import { NotFoundPage } from "./features/errors/NotFoundPage";
 
 function App() {
   return (
-    <DashboardLayout>
-      <header className="mb-8">
-        <h1>Chatbot Spark</h1>
-      </header>
+    <AuthProvider>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
 
-      <section className="grid gap-8">
-        <Card title="Exemplo Card">
-          <div className="flex flex-col gap-4">
-            <div className="flex gap-4">
-              <Button variant="primary">Botao Primario</Button>
-              <Button variant="outline">Botao vazado</Button>
-            </div>
-          </div>
-        </Card>
-      </section>
-    </DashboardLayout>
+        <Route
+          path="/"
+          element={
+            <RequireAuth>
+              <LandingPage />
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/app"
+          element={
+            <RequireAuth>
+              <DashboardLayout />
+            </RequireAuth>
+          }
+        >
+          <Route index element={<DashboardHomePage />} />
+          <Route path="chatbot" element={<ChatbotPage />} />
+          <Route path="flashcards" element={<FlashcardsPage />} />
+          <Route path="flashcards/:materia/:pergunta" element={<FlashcardSubjectPage />} />
+          <Route path="questoes" element={<QuestionsPage />} />
+          <Route path="questoes/:prova/:questao" element={<QuestionDetailPage />} />
+        </Route>
+
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </AuthProvider>
   );
 }
 

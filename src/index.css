@@ -10,6 +10,10 @@
   --color-brand-orange: #FF7A00;
   --color-brand-orange-hover: #E66C00;
 
+  /* Cores de Destaque (neon) */
+  --color-brand-cyan: #22D3EE;
+  --color-brand-cyan-soft: #67E8F9;
+
   /* Cores de Estado */
   --color-status-success: #2ECC71;
   --color-status-error: #E74C3C;
@@ -24,6 +28,9 @@
   --radius-card: 16px;
   --radius-input: 12px;
   --radius-button: 12px;
+
+  /* Sombras */
+  --shadow-glow: 0 0 30px rgba(34, 211, 238, 0.25), 0 0 70px rgba(255, 122, 0, 0.12);
 
   /* Fontes */
   --font-inter: "Inter", sans-serif;
