@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
-import img404 from '../../assets/imgs/svg/imgs/404.svg';
+import img404 from '../../assets/illustrations/404.svg';
 
 export const NotFoundPage = () => (
   <div className="flex min-h-screen w-full flex-col items-center justify-center gap-4 bg-brand-background px-6 py-16 text-center text-content-primary">

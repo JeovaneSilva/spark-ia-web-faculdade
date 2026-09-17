@@ -3,17 +3,25 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, User, X } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../auth/useAuth';
-import whiteLogo from '../../assets/imgs/png/whiteLogo.png';
+import whiteLogo from '../../assets/images/whiteLogo.png';
+
+const navItems = [
+  { href: '#inicio', label: 'Início' },
+  { href: '#funcionalidades', label: 'Funcionalidades' },
+  { href: '#comoFunciona', label: 'Como funciona' },
+  { href: '#sobreNos', label: 'Sobre nós' },
+];
 
 export const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const hideLinks = location.pathname !== '/';
 
   const toggleMenu = () => setMenuOpen((value) => !value);
+  const closeMenu = () => setMenuOpen(false);
 
   const handleLogout = () => {
     logout();
@@ -21,69 +29,76 @@ export const Header = () => {
   };
 
   return (
-    <header className="fixed top-0 z-50 w-full bg-[#011F3B] px-10 py-3 shadow-xl">
+    <header className="fixed top-0 z-50 w-full bg-brand-sidebar px-6 py-3 md:px-10">
       <nav className="flex items-center justify-between">
-        <Link to="/">
-          <div className="flex items-center gap-3">
-            <img src={whiteLogo} alt="logo spark.ia" className="w-10" />
-            <h1 className="text-2xl text-white">Spark.ia</h1>
-          </div>
+        <Link to="/" className="group flex items-center gap-3">
+          <img
+            src={whiteLogo}
+            alt="logo Spark.ia"
+            className="w-9 transition-transform duration-300 group-hover:rotate-12"
+          />
+          <span className="text-xl font-bold text-content-primary md:text-2xl">Spark.ia</span>
         </Link>
 
         <div className="md:hidden">
           <button
             onClick={toggleMenu}
-            className="text-4xl text-white hover:text-[#fa7807] active:text-[#FDAD0B]"
+            aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
+            className="flex h-10 w-10 items-center justify-center rounded-full text-content-primary transition-colors hover:bg-white/5"
           >
-            {!menuOpen && <Menu size={32} />}
+            {!menuOpen && <Menu size={24} />}
           </button>
         </div>
 
         <ul
-          className={`fixed left-0 right-0 top-0 transform bg-[#011F3B] text-xl text-white transition-transform duration-300 ease-in-out md:static md:flex md:translate-y-0 md:items-center md:gap-6 md:bg-transparent md:text-base ${
+          className={`fixed left-0 right-0 top-0 transform border-b border-white/5 bg-brand-sidebar text-lg text-content-primary shadow-2xl transition-transform duration-300 ease-in-out md:static md:flex md:translate-y-0 md:items-center md:gap-8 md:border-none md:bg-transparent md:text-sm md:shadow-none ${
             menuOpen ? 'translate-y-0' : '-translate-y-full'
           }`}
         >
-          <li className="flex w-full justify-end border-y-[1px] border-slate-700 p-2 px-5 md:hidden md:border-none">
-            <button className="text-4xl hover:text-[#fa7807]" onClick={toggleMenu}>
-              <X size={32} />
+          <li className="flex w-full justify-end border-b border-white/5 p-3 px-5 md:hidden md:border-none">
+            <button
+              className="flex h-10 w-10 items-center justify-center rounded-full text-content-primary hover:bg-white/5"
+              onClick={toggleMenu}
+              aria-label="Fechar menu"
+            >
+              <X size={24} />
             </button>
           </li>
 
-          {!hideLinks && (
-            <>
-              <li className="block w-full border-y-[1px] border-slate-700 p-2 text-center hover:text-[#fa7807] active:text-[#FDAD0B] md:w-auto md:border-none">
-                <a href="#inicio">Início</a>
+          {!hideLinks &&
+            navItems.map((item) => (
+              <li key={item.href} className="w-full border-b border-white/5 md:w-auto md:border-none">
+                <a
+                  href={item.href}
+                  onClick={closeMenu}
+                  className="group relative block w-full px-5 py-3 text-center text-content-secondary transition-colors hover:text-brand-orange md:inline-block md:w-auto md:px-0 md:py-1 md:text-center"
+                >
+                  {item.label}
+                  <span className="absolute inset-x-5 bottom-1 hidden h-px origin-left scale-x-0 bg-brand-orange transition-transform duration-300 group-hover:scale-x-100 md:inset-x-0 md:block" />
+                </a>
               </li>
-              <li className="block w-full border-y-[1px] border-slate-700 p-2 text-center hover:text-[#fa7807] active:text-[#FDAD0B] md:w-auto md:border-none">
-                <a href="#funcionalidades">Funcionalidades</a>
-              </li>
-              <li className="block w-full border-y-[1px] border-slate-700 p-2 text-center hover:text-[#fa7807] active:text-[#FDAD0B] md:w-auto md:border-none">
-                <a href="#sobreNos">Sobre nós</a>
-              </li>
-            </>
-          )}
+            ))}
 
           {isAuthenticated && (
-            <li className="flex w-full flex-col items-center justify-between gap-2 border-y-[1px] border-slate-700 p-2 px-5 text-center md:hidden">
-              <div className="flex items-center gap-2">
+            <li className="flex w-full flex-col items-center gap-3 p-5 md:hidden">
+              <div className="flex items-center gap-2 text-content-secondary">
                 <User size={16} />
-                Você
+                {user?.name ?? 'Você'}
               </div>
-              <Button variant="primary" className="w-[120px]" onClick={handleLogout}>
+              <Button variant="primary" className="w-full" onClick={handleLogout}>
                 Sair
               </Button>
             </li>
           )}
         </ul>
 
-        <div className="hidden gap-2 md:flex">
+        <div className="hidden items-center gap-3 md:flex">
           {isAuthenticated ? (
-            <div className="flex items-center gap-4 text-white">
-              <p className="flex cursor-pointer items-center gap-1 hover:text-[#FA7807] md:text-base">
+            <div className="flex items-center gap-4">
+              <span className="flex items-center gap-1.5 text-sm text-content-secondary">
                 <User size={16} />
-                Você
-              </p>
+                {user?.name ?? 'Você'}
+              </span>
               <Button variant="primary" onClick={handleLogout}>
                 Sair
               </Button>

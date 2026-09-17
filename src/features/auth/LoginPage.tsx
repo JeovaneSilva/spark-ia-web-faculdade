@@ -1,9 +1,11 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate, type Location } from 'react-router-dom';
-import { BrainCircuit, Eye, EyeOff, Lock, LogIn, Mail, Sparkles } from 'lucide-react';
+import { AlertCircle, BrainCircuit, Eye, EyeOff, Lock, LogIn, Mail, Sparkles } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Switch } from '../../components/ui/Switch';
+import { GlowBlob } from '../../components/ui/GlowBlob';
 import { useAuth } from './useAuth';
+import { ApiError } from '../../lib/httpClient';
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -11,6 +13,8 @@ export const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -22,20 +26,28 @@ export const LoginPage = () => {
     return () => clearTimeout(timeout);
   }, []);
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    login();
-    navigate(from, { replace: true });
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      await login(email, password);
+      navigate(from, { replace: true });
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Não foi possível entrar. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="relative flex h-screen w-full items-center justify-center overflow-hidden bg-brand-background px-4 py-4">
-      <div className="pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full bg-brand-cyan/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 -right-24 h-96 w-96 rounded-full bg-brand-orange/20 blur-3xl" />
+      <GlowBlob color="cyan" className="-top-32 -left-32 h-96 w-96" />
+      <GlowBlob color="orange" className="-bottom-32 -right-24 h-96 w-96" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(11,42,59,0.6)_100%)]" />
 
       <div
-        className={`relative w-full max-w-4xl rounded-card bg-gradient-to-br from-brand-cyan/40 via-white/5 to-brand-orange/30 p-px shadow-glow transition-all duration-700 ease-out ${
+        className={`relative w-full max-w-4xl rounded-card bg-gradient-to-br from-brand-cyan/25 via-white/5 to-brand-orange/20 p-px shadow-glow transition-all duration-700 ease-out ${
           isVisible ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'
         }`}
       >
@@ -127,9 +139,21 @@ export const LoginPage = () => {
 
               <Switch checked={rememberMe} onChange={setRememberMe} label="Manter-me conectado" />
 
-              <Button type="submit" variant="primary" className="mt-1 w-full shadow-[0_8px_24px_-8px_rgba(255,122,0,0.6)]">
+              {error && (
+                <div className="flex items-center gap-2 rounded-input border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">
+                  <AlertCircle size={16} />
+                  {error}
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={isSubmitting}
+                className="mt-1 w-full shadow-[0_8px_24px_-8px_rgba(255,122,0,0.6)] disabled:opacity-60"
+              >
                 <LogIn size={18} />
-                Entrar
+                {isSubmitting ? 'Entrando...' : 'Entrar'}
               </Button>
             </form>
 

@@ -1,9 +1,18 @@
 import { useNavigate } from 'react-router-dom';
+import { Flame, Layers, ListChecks, type LucideIcon } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
-import imgChatbot from '../../assets/imgs/svg/imgs/imgChatbot.svg';
-import imgFlashcards from '../../assets/imgs/svg/imgs/imgFlashcards.svg';
-import imgQuestoes from '../../assets/imgs/svg/imgs/imgQuestoes.svg';
+import { ScrollReveal } from '../../components/ui/ScrollReveal';
+import { useCountUp } from '../../hooks/useCountUp';
+import imgChatbot from '../../assets/illustrations/imgChatbot.svg';
+import imgFlashcards from '../../assets/illustrations/imgFlashcards.svg';
+import imgQuestoes from '../../assets/illustrations/imgQuestoes.svg';
+
+const stats: { icon: LucideIcon; label: string; value: number }[] = [
+  { icon: Flame, label: 'Dias seguidos estudando', value: 4 },
+  { icon: Layers, label: 'Flashcards revisados hoje', value: 12 },
+  { icon: ListChecks, label: 'Questões respondidas na semana', value: 27 },
+];
 
 const items = [
   {
@@ -36,19 +45,44 @@ export const DashboardHomePage = () => {
         <p className="text-content-secondary">Escolha por onde quer continuar seus estudos hoje.</p>
       </header>
 
+      <div className="grid gap-4 sm:grid-cols-3">
+        {stats.map((stat) => (
+          <StatCard key={stat.label} stat={stat} />
+        ))}
+      </div>
+
       <div className="grid gap-6 md:grid-cols-3">
-        {items.map((item) => (
-          <Card key={item.to} className="flex flex-col items-center gap-3 text-center">
-            <img src={item.img} alt={item.title} className="h-32 w-32 object-contain" />
-            <h3 className="text-lg font-semibold">{item.title}</h3>
-            <div className="h-px w-16 bg-brand-orange" />
-            <p className="text-sm text-content-secondary">{item.text}</p>
-            <Button variant="primary" className="mt-2" onClick={() => navigate(item.to)}>
-              Estudar
-            </Button>
-          </Card>
+        {items.map((item, index) => (
+          <ScrollReveal key={item.to} delay={index * 100}>
+            <Card className="flex h-full flex-col items-center gap-3 text-center">
+              <img src={item.img} alt={item.title} className="h-32 w-32 object-contain" />
+              <h3 className="text-lg font-semibold">{item.title}</h3>
+              <div className="h-px w-16 bg-brand-orange" />
+              <p className="text-sm text-content-secondary">{item.text}</p>
+              <Button variant="primary" className="mt-2" onClick={() => navigate(item.to)}>
+                Estudar
+              </Button>
+            </Card>
+          </ScrollReveal>
         ))}
       </div>
     </div>
+  );
+};
+
+const StatCard = ({ stat }: { stat: { icon: LucideIcon; label: string; value: number } }) => {
+  const Icon = stat.icon;
+  const value = useCountUp(stat.value);
+
+  return (
+    <Card className="flex items-center gap-4">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-orange/10 text-brand-orange">
+        <Icon size={20} />
+      </span>
+      <div>
+        <p className="text-2xl font-bold text-content-primary">{value}</p>
+        <p className="text-sm text-content-secondary">{stat.label}</p>
+      </div>
+    </Card>
   );
 };

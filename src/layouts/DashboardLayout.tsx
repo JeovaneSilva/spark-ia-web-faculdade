@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
-import { LayoutGrid, BookOpen, BrainCircuit, Home, Menu } from 'lucide-react';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { LayoutGrid, BookOpen, BrainCircuit, Home, LogOut, Menu, User } from 'lucide-react';
+import { useAuth } from '../features/auth/useAuth';
 
 const navItems = [
   { to: '/app', label: 'Início', icon: <Home size={20} /> },
@@ -11,6 +12,13 @@ const navItems = [
 
 export const DashboardLayout = () => {
   const location = useLocation();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-brand-background">
@@ -33,11 +41,34 @@ export const DashboardLayout = () => {
             />
           ))}
         </nav>
+
+        <div className="mt-auto flex items-center justify-between gap-2 rounded-button px-2 py-2 text-content-secondary">
+          <span className="flex items-center gap-2 truncate text-sm">
+            <User size={16} />
+            <span className="truncate">{user?.name ?? 'Você'}</span>
+          </span>
+          <button
+            onClick={handleLogout}
+            aria-label="Sair"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/5 hover:text-white"
+          >
+            <LogOut size={16} />
+          </button>
+        </div>
       </aside>
 
       <header className="md:hidden p-4 bg-brand-sidebar flex justify-between items-center">
         <span className="text-brand-orange font-bold text-xl">Spark.ia</span>
-        <Menu className="text-white cursor-pointer" />
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1.5 text-sm text-content-secondary">
+            <User size={16} />
+            {user?.name ?? 'Você'}
+          </span>
+          <button onClick={handleLogout} aria-label="Sair" className="text-white">
+            <LogOut size={20} />
+          </button>
+          <Menu className="text-white cursor-pointer" />
+        </div>
       </header>
 
       <main className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
