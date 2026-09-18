@@ -23,6 +23,8 @@ async function parseErrorMessage(response: Response, fallback: string): Promise<
 interface ApiRequestOptions {
   method?: string;
   body?: unknown;
+  /** FormData vai direto, sem JSON.stringify nem Content-Type manual (o browser define o boundary) */
+  formData?: FormData;
   token?: string;
   /** Mensagens de erro específicas por status HTTP (ex.: 401 -> "Senha incorreta") */
   errorMessages?: Record<number, string>;
@@ -33,6 +35,7 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
   const {
     method = 'GET',
     body,
+    formData,
     token,
     errorMessages = {},
     fallbackErrorMessage = 'Algo deu errado. Tente novamente.',
@@ -45,7 +48,7 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
   const response = await fetch(`${API_URL}${path}`, {
     method,
     headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: formData ?? (body !== undefined ? JSON.stringify(body) : undefined),
   });
 
   if (!response.ok) {
