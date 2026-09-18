@@ -1,11 +1,10 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { AuthContext } from './AuthContext';
 import { getMeRequest, loginRequest, signupRequest, type CurrentUser } from './authApi';
-
-const TOKEN_KEY = 'spark_access_token';
+import { getToken, setToken as storeToken, clearToken } from '../../lib/tokenStorage';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
+  const [token, setToken] = useState<string | null>(() => getToken());
   const [user, setUser] = useState<CurrentUser | null>(null);
 
   const isLoading = token !== null && user === null;
@@ -20,7 +19,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       })
       .catch(() => {
         if (!cancelled) {
-          localStorage.removeItem(TOKEN_KEY);
+          clearToken();
           setToken(null);
         }
       });
@@ -32,7 +31,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     const accessToken = await loginRequest(email, password);
-    localStorage.setItem(TOKEN_KEY, accessToken);
+    storeToken(accessToken);
     setToken(accessToken);
   };
 
@@ -42,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem(TOKEN_KEY);
+    clearToken();
     setToken(null);
     setUser(null);
   };
