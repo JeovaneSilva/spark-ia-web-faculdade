@@ -1,31 +1,76 @@
 import { useState, type FormEvent } from 'react';
-import { BrainCircuit, Send } from 'lucide-react';
+import { BrainCircuit, Loader2, Send, User } from 'lucide-react';
+import { generateQuestions, type GeneratedQuestion } from './chatbotApi';
+import { ChatQuestionCard } from './ChatQuestionCard';
+import { ApiError } from '../../lib/httpClient';
 
 interface ChatMessage {
+  id: number;
   sender: 'Você' | 'Spark';
-  text: string;
+  kind: 'text' | 'loading' | 'questions';
+  text?: string;
+  questions?: GeneratedQuestion[];
+}
+
+let nextId = 1;
+
+// Um texto colado inteiro (artigo grande) não precisa aparecer por completo
+// na bolha da conversa -- só serve pra lembrar o que foi pedido.
+const MESSAGE_PREVIEW_CHARS = 280;
+
+function previewText(text: string): string {
+  return text.length > MESSAGE_PREVIEW_CHARS ? `${text.slice(0, MESSAGE_PREVIEW_CHARS)}…` : text;
 }
 
 export const ChatbotPage = () => {
   const [conversation, setConversation] = useState<ChatMessage[]>([]);
-  const [prompt, setPrompt] = useState('');
+  const [content, setContent] = useState('');
+  const [quantity, setQuantity] = useState(5);
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  const handleSend = (event: FormEvent) => {
+  const handleSend = async (event: FormEvent) => {
     event.preventDefault();
-    if (!prompt.trim()) return;
+    const trimmed = content.trim();
+    if (!trimmed || isGenerating) return;
 
-    setConversation((current) => [...current, { sender: 'Você', text: prompt }]);
-    setPrompt('');
+    const userMessageId = nextId++;
+    const loadingId = nextId++;
+    setConversation((current) => [
+      ...current,
+      { id: userMessageId, sender: 'Você', kind: 'text', text: trimmed },
+      { id: loadingId, sender: 'Spark', kind: 'loading' },
+    ]);
+    setContent('');
+    setIsGenerating(true);
 
-    setTimeout(() => {
-      setConversation((current) => [
-        ...current,
-        {
-          sender: 'Spark',
-          text: 'Essa funcionalidade ainda está em desenvolvimento — em breve vou conseguir gerar questões de verdade a partir do que você enviar!',
-        },
-      ]);
-    }, 500);
+    try {
+      const result = await generateQuestions(trimmed, quantity);
+      setConversation((current) =>
+        current.map((message) =>
+          message.id === loadingId
+            ? {
+                id: loadingId,
+                sender: 'Spark',
+                kind: 'questions',
+                text:
+                  result.questions.length === 1
+                    ? 'Gerei 1 questão sobre isso:'
+                    : `Gerei ${result.questions.length} questões sobre isso:`,
+                questions: result.questions,
+              }
+            : message,
+        ),
+      );
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Não foi possível gerar as questões agora.';
+      setConversation((current) =>
+        current.map((item) =>
+          item.id === loadingId ? { id: loadingId, sender: 'Spark', kind: 'text', text: message } : item,
+        ),
+      );
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -47,44 +92,95 @@ export const ChatbotPage = () => {
               <BrainCircuit size={48} className="text-brand-cyan" />
               <p className="text-xl font-semibold text-content-primary">Como posso te ajudar hoje?</p>
               <p className="max-w-sm text-sm">
-                Envie um texto ou link de um conteúdo educacional e eu gero questões para você
-                estudar.
+                Cole um texto, um link de conteúdo educacional, ou só descreva um tema — eu identifico a
+                disciplina e gero questões estilo ENEM para você estudar.
               </p>
             </div>
           ) : (
-            <div className="flex flex-col gap-4">
-              {conversation.map((message, index) => (
-                <div key={index} className={message.sender === 'Você' ? 'text-right' : 'text-left'}>
-                  <span className="text-xs font-semibold text-content-secondary">{message.sender}</span>
-                  <p
-                    className={`mt-1 inline-block rounded-card px-4 py-2 text-sm ${
-                      message.sender === 'Você'
-                        ? 'bg-brand-orange text-white'
-                        : 'bg-brand-sidebar text-content-primary'
-                    }`}
-                  >
-                    {message.text}
-                  </p>
-                </div>
-              ))}
+            <div className="flex flex-col gap-5">
+              {conversation.map((message) => {
+                const isUser = message.sender === 'Você';
+                return (
+                  <div key={message.id} className={`flex items-start gap-3 ${isUser ? 'flex-row-reverse' : ''}`}>
+                    <div
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                        isUser ? 'bg-brand-orange/15 text-brand-orange' : 'bg-brand-cyan/15 text-brand-cyan'
+                      }`}
+                    >
+                      {isUser ? <User size={16} /> : <BrainCircuit size={16} />}
+                    </div>
+
+                    <div
+                      className={`flex min-w-0 flex-col gap-1 ${isUser ? 'items-end' : 'items-start'} ${
+                        message.kind === 'questions' ? 'w-full' : 'max-w-[75%]'
+                      }`}
+                    >
+                      {message.kind === 'loading' && (
+                        <div className="flex items-center gap-1.5 rounded-card rounded-tl-sm bg-brand-sidebar px-4 py-3.5">
+                          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-content-disabled [animation-delay:-0.3s]" />
+                          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-content-disabled [animation-delay:-0.15s]" />
+                          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-content-disabled" />
+                        </div>
+                      )}
+
+                      {message.kind === 'text' && (
+                        <p
+                          className={`whitespace-pre-wrap break-words rounded-card px-4 py-2.5 text-left text-sm leading-relaxed ${
+                            isUser
+                              ? 'rounded-tr-sm bg-brand-orange text-white'
+                              : 'rounded-tl-sm bg-brand-sidebar text-content-primary'
+                          }`}
+                        >
+                          {isUser ? previewText(message.text ?? '') : message.text}
+                        </p>
+                      )}
+
+                      {message.kind === 'questions' && (
+                        <div className="flex w-full min-w-0 flex-col gap-3">
+                          <p className="text-sm text-content-secondary">{message.text}</p>
+                          {message.questions?.map((question) => (
+                            <ChatQuestionCard key={question.id_question} question={question} />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
 
-        <form onSubmit={handleSend} className="flex items-center gap-2 border-t border-white/5 p-4">
-          <input
-            value={prompt}
-            onChange={(event) => setPrompt(event.target.value)}
-            placeholder="Insira um texto ou URL de um site educacional."
-            className="flex-1 rounded-input border border-white/10 bg-brand-background/60 px-4 py-3 text-content-primary placeholder:text-content-disabled focus:border-brand-cyan focus:outline-none"
+        <form onSubmit={handleSend} className="flex flex-col gap-2 border-t border-white/5 p-4">
+          <textarea
+            value={content}
+            onChange={(event) => setContent(event.target.value)}
+            placeholder="Cole um texto, um link, ou descreva um tema..."
+            rows={2}
+            maxLength={20000}
+            className="w-full resize-none rounded-input border border-white/10 bg-brand-background/60 px-4 py-3 text-sm text-content-primary placeholder:text-content-disabled focus:border-brand-cyan focus:outline-none"
           />
-          <button
-            type="submit"
-            className="flex h-11 w-11 items-center justify-center rounded-input bg-brand-orange text-white transition-colors hover:bg-brand-orange-hover"
-            aria-label="Enviar mensagem"
-          >
-            <Send size={18} />
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={quantity}
+              onChange={(event) => setQuantity(Number(event.target.value))}
+              className="rounded-input border border-white/10 bg-brand-background/60 px-3 py-2 text-sm text-content-primary focus:border-brand-cyan focus:outline-none"
+            >
+              {[1, 3, 5, 8, 10].map((n) => (
+                <option key={n} value={n}>
+                  {n} {n > 1 ? 'questões' : 'questão'}
+                </option>
+              ))}
+            </select>
+            <button
+              type="submit"
+              disabled={!content.trim() || isGenerating}
+              className="ml-auto flex h-11 w-11 items-center justify-center rounded-input bg-brand-orange text-white transition-colors hover:bg-brand-orange-hover disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label="Enviar mensagem"
+            >
+              {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+            </button>
+          </div>
         </form>
       </div>
     </div>

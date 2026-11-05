@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, ImagePlus, X } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
-import { subjects, findSubjectBySlug } from './subjects';
+import { subjects, findSubjectBySlug } from '../../lib/subjects';
 import { createFlashcard, getFlashcard, updateFlashcard, uploadFlashcardImage } from './flashcardsApi';
 import { ApiError } from '../../lib/httpClient';
 

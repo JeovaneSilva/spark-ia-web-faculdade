@@ -4,7 +4,7 @@ import { ArrowLeft, CheckCircle2, Plus, RotateCcw } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { StudyCard } from './StudyCard';
-import { findSubjectBySlug, findSubjectByValue } from './subjects';
+import { findSubjectBySlug, findSubjectByValue } from '../../lib/subjects';
 import {
   deleteFlashcard,
   listFlashcards,

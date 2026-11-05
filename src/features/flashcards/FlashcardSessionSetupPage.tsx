@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Play } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
-import { subjects } from './subjects';
+import { subjects } from '../../lib/subjects';
 import { listFlashcards, type Flashcard } from './flashcardsApi';
 import { ApiError } from '../../lib/httpClient';
 

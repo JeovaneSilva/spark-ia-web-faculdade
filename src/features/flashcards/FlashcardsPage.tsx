@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Play, Plus } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
-import { subjects } from './subjects';
+import { subjects } from '../../lib/subjects';
 import { listFlashcards, type Flashcard } from './flashcardsApi';
 import { ApiError } from '../../lib/httpClient';
 
