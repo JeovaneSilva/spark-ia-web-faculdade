@@ -34,17 +34,18 @@ export const Hero = ({ scrollY, onPrimaryCta, onSecondaryCta }: HeroProps) => {
         <ScrollReveal className="md:w-1/2" direction="left">
           <span className="inline-flex items-center gap-2 rounded-full border border-brand-cyan/30 bg-brand-cyan/10 px-4 py-1.5 text-xs font-semibold tracking-wide text-brand-cyan">
             <Sparkles size={14} className="animate-pulse" />
-            Estude mais rápido com IA
+            IA para sua aprovação no ENEM
           </span>
 
           <h1 className="mt-5 text-5xl font-bold text-brand-orange md:text-6xl">
             Spark.ia
           </h1>
           <h2 className="mt-3 text-3xl font-bold md:text-5xl">
-            Seu Assistente Inteligente para Preparação no ENEM
+            Sua preparação para o ENEM, mais inteligente e mais eficaz
           </h2>
           <p className="mt-5 mb-8 max-w-lg text-lg text-content-secondary md:text-xl">
-            Transforme Textos e Links em Questões de Prova em Segundos
+            Transforme textos, links e materiais que você já estuda em questões personalizadas,
+            flashcards inteligentes e uma rotina de revisão mais focada no que realmente importa para a sua aprovação.
           </p>
 
           <div className="flex flex-wrap items-center gap-4">

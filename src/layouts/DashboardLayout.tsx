@@ -21,7 +21,7 @@ export const DashboardLayout = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-brand-background">
+    <div className="flex h-screen flex-col overflow-hidden bg-brand-background md:flex-row">
       {/* Sidebar - Desktop */}
       <aside className="hidden md:flex w-70 bg-brand-sidebar flex-col border-r border-white/5 p-4 gap-8">
         <div className="text-brand-orange font-bold text-2xl px-2">Spark.ia</div>
@@ -71,7 +71,7 @@ export const DashboardLayout = () => {
         </div>
       </header>
 
-      <main className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
+      <main className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 overflow-hidden p-4 md:p-8">
         <Outlet />
       </main>
     </div>

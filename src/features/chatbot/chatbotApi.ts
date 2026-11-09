@@ -22,6 +22,29 @@ export interface GenerateQuestionsResult {
   questions: GeneratedQuestion[];
 }
 
+export interface ChatbotSessionSummary {
+  id_chatbot_session: string;
+  requestedTopic: string;
+  createdAt: string;
+  questionsCount: number;
+}
+
+export async function listChatbotSessions(): Promise<ChatbotSessionSummary[]> {
+  return apiRequest<ChatbotSessionSummary[]>('/chatbot/sessions', {
+    token: getToken() ?? undefined,
+    fallbackErrorMessage: 'Não foi possível carregar as conversas salvas.',
+  });
+}
+
+export async function renameChatbotSession(id: string, requestedTopic: string): Promise<ChatbotSessionSummary> {
+  return apiRequest<ChatbotSessionSummary>(`/chatbot/sessions/${id}`, {
+    method: 'PATCH',
+    body: { requestedTopic },
+    token: getToken() ?? undefined,
+    fallbackErrorMessage: 'Não foi possível salvar o nome da conversa.',
+  });
+}
+
 export async function generateQuestions(content: string, quantity: number): Promise<GenerateQuestionsResult> {
   return apiRequest<GenerateQuestionsResult>('/chatbot/generate', {
     method: 'POST',

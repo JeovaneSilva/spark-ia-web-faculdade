@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Flame, Layers, ListChecks, type LucideIcon } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
@@ -7,12 +8,44 @@ import { useCountUp } from '../../hooks/useCountUp';
 import imgChatbot from '../../assets/illustrations/imgChatbot.svg';
 import imgFlashcards from '../../assets/illustrations/imgFlashcards.svg';
 import imgQuestoes from '../../assets/illustrations/imgQuestoes.svg';
+import { listFlashcards } from '../flashcards/flashcardsApi';
+import { getEnemProgress, listEnemYears } from '../questions/questionsApi';
 
-const stats: { icon: LucideIcon; label: string; value: number }[] = [
-  { icon: Flame, label: 'Dias seguidos estudando', value: 4 },
-  { icon: Layers, label: 'Flashcards revisados hoje', value: 12 },
-  { icon: ListChecks, label: 'Questões respondidas na semana', value: 27 },
+const defaultStats: { icon: LucideIcon; label: string; value: number }[] = [
+  { icon: Flame, label: 'Dias seguidos estudando', value: 0 },
+  { icon: Layers, label: 'Flashcards revisados hoje', value: 0 },
+  { icon: ListChecks, label: 'Questões respondidas', value: 0 },
 ];
+
+const isSameDay = (dateA: Date, dateB: Date) =>
+  dateA.getFullYear() === dateB.getFullYear() &&
+  dateA.getMonth() === dateB.getMonth() &&
+  dateA.getDate() === dateB.getDate();
+
+const getStreakDays = (dates: Date[]) => {
+  const uniqueDays = new Set(dates.map((date) => `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`));
+
+  if (uniqueDays.size === 0) return 0;
+
+  const sortedDays = Array.from(uniqueDays)
+    .map((value) => new Date(`${value}T12:00:00`))
+    .sort((a, b) => b.getTime() - a.getTime());
+
+  let streak = 0;
+  let cursor = new Date();
+
+  for (const day of sortedDays) {
+    if (isSameDay(day, cursor)) {
+      streak += 1;
+      cursor.setDate(cursor.getDate() - 1);
+      continue;
+    }
+
+    break;
+  }
+
+  return streak;
+};
 
 const items = [
   {
@@ -37,6 +70,63 @@ const items = [
 
 export const DashboardHomePage = () => {
   const navigate = useNavigate();
+  const [stats, setStats] = useState(defaultStats);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadStats = async () => {
+      try {
+        const [flashcards, years] = await Promise.all([
+          listFlashcards(),
+          listEnemYears().catch(() => []),
+        ]);
+
+        const reviewedDates = flashcards
+          .map((flashcard) => flashcard.lastReviewedAt ? new Date(flashcard.lastReviewedAt) : null)
+          .filter((date): date is Date => date instanceof Date && !Number.isNaN(date.getTime()));
+
+        const reviewedToday = reviewedDates.filter((date) => isSameDay(date, new Date())).length;
+        const streakDays = getStreakDays(reviewedDates);
+
+        let answeredQuestions = 0;
+
+        if (years.length > 0) {
+          const progressByYear = await Promise.all(
+            years.map(async (year) => {
+              try {
+                return await getEnemProgress(year);
+              } catch {
+                return [];
+              }
+            }),
+          );
+
+          answeredQuestions = progressByYear
+            .flat()
+            .filter((progress) => progress.answered)
+            .length;
+        }
+
+        if (!active) return;
+
+        setStats([
+          { icon: Flame, label: 'Dias seguidos estudando', value: streakDays },
+          { icon: Layers, label: 'Flashcards revisados hoje', value: reviewedToday },
+          { icon: ListChecks, label: 'Questões respondidas', value: answeredQuestions },
+        ]);
+      } catch {
+        if (!active) return;
+        setStats(defaultStats);
+      }
+    };
+
+    loadStats();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <div className="flex flex-col gap-6">

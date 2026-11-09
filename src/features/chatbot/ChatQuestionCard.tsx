@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { submitAnswer, type AnswerOption, type AnswerResult } from '../questions/questionsApi';
@@ -7,12 +7,46 @@ import { findSubjectByValue } from '../../lib/subjects';
 import { ApiError } from '../../lib/httpClient';
 
 const OPTION_LETTERS: AnswerOption[] = ['A', 'B', 'C', 'D', 'E'];
+const CHAT_QUESTION_ANSWERS_STORAGE_KEY = 'sparkia-chatbot-question-answers-v1';
+
+interface StoredQuestionAnswer {
+  selected: AnswerOption | null;
+  result: AnswerResult | null;
+}
+
+const readStoredQuestionAnswer = (questionId: string): StoredQuestionAnswer => {
+  try {
+    const raw = window.localStorage.getItem(CHAT_QUESTION_ANSWERS_STORAGE_KEY);
+    if (!raw) return { selected: null, result: null };
+
+    const parsed = JSON.parse(raw) as Record<string, StoredQuestionAnswer>;
+    return parsed[questionId] ?? { selected: null, result: null };
+  } catch {
+    return { selected: null, result: null };
+  }
+};
+
+const saveQuestionAnswer = (questionId: string, answer: StoredQuestionAnswer) => {
+  try {
+    const raw = window.localStorage.getItem(CHAT_QUESTION_ANSWERS_STORAGE_KEY);
+    const parsed = raw ? (JSON.parse(raw) as Record<string, StoredQuestionAnswer>) : {};
+    parsed[questionId] = answer;
+    window.localStorage.setItem(CHAT_QUESTION_ANSWERS_STORAGE_KEY, JSON.stringify(parsed));
+  } catch {
+    // Ignora falha de persistência local em ambientes restritos.
+  }
+};
 
 export const ChatQuestionCard = ({ question }: { question: GeneratedQuestion }) => {
-  const [selected, setSelected] = useState<AnswerOption | null>(null);
-  const [result, setResult] = useState<AnswerResult | null>(null);
+  const storedAnswer = readStoredQuestionAnswer(question.id_question);
+  const [selected, setSelected] = useState<AnswerOption | null>(storedAnswer.selected);
+  const [result, setResult] = useState<AnswerResult | null>(storedAnswer.result);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    saveQuestionAnswer(question.id_question, { selected, result });
+  }, [question.id_question, selected, result]);
 
   const alternatives: Record<AnswerOption, string> = {
     A: question.optionA,
@@ -29,6 +63,7 @@ export const ChatQuestionCard = ({ question }: { question: GeneratedQuestion }) 
     try {
       const response = await submitAnswer(question.id_question, selected);
       setResult(response);
+      saveQuestionAnswer(question.id_question, { selected, result: response });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Não foi possível registrar sua resposta.');
     } finally {
