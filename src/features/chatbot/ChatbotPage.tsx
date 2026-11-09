@@ -1,6 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { BrainCircuit, Check, Loader2, MessageSquareText, Pencil, Plus, Send, User, X } from 'lucide-react';
-import { generateQuestions, renameChatbotSession, type GeneratedQuestion } from './chatbotApi';
+import { BrainCircuit, Check, Loader2, MessageSquareText, Pencil, Plus, Send, Trash2, User, X } from 'lucide-react';
+import {
+  deleteChatbotSession,
+  generateQuestions,
+  listChatbotSessions,
+  renameChatbotSession,
+  type GeneratedQuestion,
+} from './chatbotApi';
 import { ChatQuestionCard } from './ChatQuestionCard';
 import { ApiError } from '../../lib/httpClient';
 
@@ -42,6 +48,19 @@ const readStoredSessions = (): ChatSession[] => {
   }
 };
 
+const persistSessions = (sessions: ChatSession[]) => {
+  try {
+    if (sessions.length === 0) {
+      window.localStorage.removeItem(STORAGE_KEY);
+      return;
+    }
+
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+  } catch {
+    // Ignora falhas de persistência em ambientes restritivos.
+  }
+};
+
 const createEmptySession = (title = 'Nova conversa'): ChatSession => ({
   id: createSessionId(),
   title,
@@ -67,10 +86,60 @@ export const ChatbotPage = () => {
   const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+
+    const loadSessions = async () => {
+      try {
+        const apiSessions = await listChatbotSessions();
+        if (!isMounted) return;
+
+        const localSessions = readStoredSessions();
+        const localById = new Map(localSessions.map((session) => [session.id, session]));
+
+        const merged = apiSessions.map((session) => {
+          const local = localById.get(session.id_chatbot_session);
+          return {
+            id: session.id_chatbot_session,
+            title: local?.title || session.requestedTopic || 'Nova conversa',
+            updatedAt: local?.updatedAt ?? new Date(session.createdAt).getTime(),
+            messages: local?.messages ?? [],
+          } satisfies ChatSession;
+        });
+
+        const extras = localSessions.filter(
+          (local) => !apiSessions.some((session) => session.id_chatbot_session === local.id),
+        );
+
+        const nextSessions = [...extras, ...merged].sort((a, b) => b.updatedAt - a.updatedAt);
+        setSessions(nextSessions);
+        persistSessions(nextSessions);
+
+        if (nextSessions.length > 0 && !activeSessionId) {
+          setActiveSessionId(nextSessions[0].id);
+        }
+      } catch {
+        if (!isMounted) return;
+        const localSessions = readStoredSessions();
+        setSessions(localSessions);
+        if (localSessions.length > 0 && !activeSessionId) {
+          setActiveSessionId(localSessions[0].id);
+        }
+      }
+    };
+
+    void loadSessions();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    persistSessions(sessions);
+  }, [sessions]);
+
+  useEffect(() => {
     if (sessions.length === 0) {
-      const initial = createEmptySession();
-      setSessions([initial]);
-      setActiveSessionId(initial.id);
+      setActiveSessionId(null);
       return;
     }
 
@@ -84,10 +153,6 @@ export const ChatbotPage = () => {
       setActiveSessionId(sessions[0].id);
     }
   }, [sessions, activeSessionId]);
-
-  useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
-  }, [sessions]);
 
   const activeSession = sessions.find((session) => session.id === activeSessionId) ?? sessions[0];
   const conversation = activeSession?.messages ?? [];
@@ -133,6 +198,27 @@ export const ChatbotPage = () => {
 
     setEditingSessionId(null);
     setDraftSessionTitle('');
+  };
+
+  const deleteConversation = async (sessionId: string) => {
+    const session = sessions.find((item) => item.id === sessionId);
+    if (!session) return;
+
+    const confirmed = window.confirm(`Excluir "${session.title || 'esta conversa'}"?`);
+    if (!confirmed) return;
+
+    const nextSessions = sessions.filter((item) => item.id !== sessionId);
+    setSessions(nextSessions);
+
+    if (activeSessionId === sessionId) {
+      setActiveSessionId(nextSessions[0]?.id ?? null);
+    }
+
+    try {
+      await deleteChatbotSession(sessionId);
+    } catch {
+      // Mantém a exclusão local mesmo se a remoção no backend falhar.
+    }
   };
 
   const handleSend = async (event: FormEvent) => {
@@ -304,18 +390,31 @@ export const ChatbotPage = () => {
                       </button>
                     </div>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setEditingSessionId(session.id);
-                        setDraftSessionTitle(session.title || 'Nova conversa');
-                      }}
-                      aria-label="Editar nome do chat"
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/5 text-content-secondary hover:text-white"
-                    >
-                      <Pencil size={14} />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setEditingSessionId(session.id);
+                          setDraftSessionTitle(session.title || 'Nova conversa');
+                        }}
+                        aria-label="Editar nome do chat"
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/5 text-content-secondary hover:text-white"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void deleteConversation(session.id);
+                        }}
+                        aria-label="Excluir conversa"
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:text-red-200"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   )}
                 </div>
               );

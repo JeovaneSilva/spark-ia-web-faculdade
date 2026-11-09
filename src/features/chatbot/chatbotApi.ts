@@ -45,6 +45,14 @@ export async function renameChatbotSession(id: string, requestedTopic: string): 
   });
 }
 
+export async function deleteChatbotSession(id: string): Promise<void> {
+  return apiRequest<void>(`/chatbot/sessions/${id}`, {
+    method: 'DELETE',
+    token: getToken() ?? undefined,
+    fallbackErrorMessage: 'Não foi possível excluir a conversa.',
+  });
+}
+
 export async function generateQuestions(content: string, quantity: number): Promise<GenerateQuestionsResult> {
   return apiRequest<GenerateQuestionsResult>('/chatbot/generate', {
     method: 'POST',

@@ -7,46 +7,63 @@ import { findSubjectByValue } from '../../lib/subjects';
 import { ApiError } from '../../lib/httpClient';
 
 const OPTION_LETTERS: AnswerOption[] = ['A', 'B', 'C', 'D', 'E'];
-const CHAT_QUESTION_ANSWERS_STORAGE_KEY = 'sparkia-chatbot-question-answers-v1';
+const ANSWERS_STORAGE_KEY = 'sparkia-chatbot-answers-v1';
 
-interface StoredQuestionAnswer {
+interface PersistedAnswerState {
   selected: AnswerOption | null;
   result: AnswerResult | null;
 }
 
-const readStoredQuestionAnswer = (questionId: string): StoredQuestionAnswer => {
+const readPersistedAnswerState = (questionId: string): PersistedAnswerState | null => {
   try {
-    const raw = window.localStorage.getItem(CHAT_QUESTION_ANSWERS_STORAGE_KEY);
-    if (!raw) return { selected: null, result: null };
+    const raw = window.localStorage.getItem(ANSWERS_STORAGE_KEY);
+    if (!raw) return null;
 
-    const parsed = JSON.parse(raw) as Record<string, StoredQuestionAnswer>;
-    return parsed[questionId] ?? { selected: null, result: null };
+    const parsed = JSON.parse(raw) as Record<string, PersistedAnswerState>;
+    return parsed[questionId] ?? null;
   } catch {
-    return { selected: null, result: null };
+    return null;
   }
 };
 
-const saveQuestionAnswer = (questionId: string, answer: StoredQuestionAnswer) => {
+const persistAnswerState = (questionId: string, value: PersistedAnswerState | null) => {
   try {
-    const raw = window.localStorage.getItem(CHAT_QUESTION_ANSWERS_STORAGE_KEY);
-    const parsed = raw ? (JSON.parse(raw) as Record<string, StoredQuestionAnswer>) : {};
-    parsed[questionId] = answer;
-    window.localStorage.setItem(CHAT_QUESTION_ANSWERS_STORAGE_KEY, JSON.stringify(parsed));
+    const raw = window.localStorage.getItem(ANSWERS_STORAGE_KEY);
+    const parsed = raw ? (JSON.parse(raw) as Record<string, PersistedAnswerState>) : {};
+
+    if (!value) {
+      delete parsed[questionId];
+      if (Object.keys(parsed).length === 0) {
+        window.localStorage.removeItem(ANSWERS_STORAGE_KEY);
+        return;
+      }
+
+      window.localStorage.setItem(ANSWERS_STORAGE_KEY, JSON.stringify(parsed));
+      return;
+    }
+
+    window.localStorage.setItem(
+      ANSWERS_STORAGE_KEY,
+      JSON.stringify({
+        ...parsed,
+        [questionId]: value,
+      }),
+    );
   } catch {
-    // Ignora falha de persistência local em ambientes restritos.
+    // ignora falha de persistência em navegadores restritivos
   }
 };
 
 export const ChatQuestionCard = ({ question }: { question: GeneratedQuestion }) => {
-  const storedAnswer = readStoredQuestionAnswer(question.id_question);
-  const [selected, setSelected] = useState<AnswerOption | null>(storedAnswer.selected);
-  const [result, setResult] = useState<AnswerResult | null>(storedAnswer.result);
+  const persistedAnswer = readPersistedAnswerState(question.id_question);
+  const [selected, setSelected] = useState<AnswerOption | null>(persistedAnswer?.selected ?? null);
+  const [result, setResult] = useState<AnswerResult | null>(persistedAnswer?.result ?? null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    saveQuestionAnswer(question.id_question, { selected, result });
-  }, [question.id_question, selected, result]);
+    persistAnswerState(question.id_question, { selected, result });
+  }, [question.id_question, result, selected]);
 
   const alternatives: Record<AnswerOption, string> = {
     A: question.optionA,
@@ -63,7 +80,6 @@ export const ChatQuestionCard = ({ question }: { question: GeneratedQuestion }) 
     try {
       const response = await submitAnswer(question.id_question, selected);
       setResult(response);
-      saveQuestionAnswer(question.id_question, { selected, result: response });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Não foi possível registrar sua resposta.');
     } finally {

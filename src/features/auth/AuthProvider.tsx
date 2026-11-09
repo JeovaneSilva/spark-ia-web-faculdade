@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { AuthContext } from './AuthContext';
 import { getMeRequest, loginRequest, signupRequest, type CurrentUser } from './authApi';
 import { getToken, setToken as storeToken, clearToken } from '../../lib/tokenStorage';
+import { ApiError } from '../../lib/httpClient';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(() => getToken());
@@ -17,11 +18,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .then((currentUser) => {
         if (!cancelled) setUser(currentUser);
       })
-      .catch(() => {
-        if (!cancelled) {
+      .catch((error) => {
+        if (cancelled) return;
+
+        if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
           clearToken();
           setToken(null);
+          return;
         }
+
+        // Network/transient errors should not log the user out immediately.
       });
 
     return () => {
