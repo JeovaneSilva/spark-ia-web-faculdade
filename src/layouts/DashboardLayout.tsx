@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutGrid, BookOpen, BrainCircuit, Home, LogOut, Menu, User } from 'lucide-react';
+import { LayoutGrid, BookOpen, BrainCircuit, Home, LogOut, Menu, User, X } from 'lucide-react';
 import { useAuth } from '../features/auth/useAuth';
 
 const navItems = [
@@ -14,6 +14,7 @@ export const DashboardLayout = () => {
   const location = useLocation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -21,9 +22,9 @@ export const DashboardLayout = () => {
   };
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-brand-background md:flex-row">
+    <div className="flex min-h-dvh flex-col bg-brand-background md:h-screen md:flex-row md:overflow-hidden">
       {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex w-70 bg-brand-sidebar flex-col border-r border-white/5 p-4 gap-8">
+      <aside className="hidden w-64 flex-col gap-8 border-r border-white/5 bg-brand-sidebar p-4 md:flex">
         <div className="text-brand-orange font-bold text-2xl px-2">Spark.ia</div>
 
         <nav className="flex flex-col gap-2">
@@ -57,22 +58,43 @@ export const DashboardLayout = () => {
         </div>
       </aside>
 
-      <header className="md:hidden p-4 bg-brand-sidebar flex justify-between items-center">
+      <header className="relative flex items-center justify-between bg-brand-sidebar p-4 md:hidden">
         <span className="text-brand-orange font-bold text-xl">Spark.ia</span>
         <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1.5 text-sm text-content-secondary">
+          <span className="hidden items-center gap-1.5 text-sm text-content-secondary sm:flex">
             <User size={16} />
             {user?.name ?? 'Você'}
           </span>
           <button onClick={handleLogout} aria-label="Sair" className="text-white">
             <LogOut size={20} />
           </button>
-          <Menu className="text-white cursor-pointer" />
+          <button
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            aria-label={mobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
+            className="text-white"
+          >
+            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
         </div>
+        {mobileMenuOpen && (
+          <nav className="absolute inset-x-0 top-full z-30 flex flex-col gap-1 border-t border-white/5 bg-brand-sidebar p-3 shadow-xl">
+            {navItems.map((item) => (
+              <NavItem
+                key={item.to}
+                to={item.to}
+                icon={item.icon}
+                label={item.label}
+                active={item.to === '/app' ? location.pathname === '/app' : location.pathname.startsWith(item.to)}
+              />
+            ))}
+          </nav>
+        )}
       </header>
 
-      <main className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 overflow-hidden p-4 md:p-8">
-        <Outlet />
+      <main className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 overflow-x-hidden overflow-y-auto p-3 sm:p-4 md:p-8">
+        <div className="w-full min-w-0">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

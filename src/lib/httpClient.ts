@@ -56,6 +56,7 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
     throw new ApiError(message, response.status);
   }
 
-  if (response.status === 204) return undefined as T;
+  // Algumas rotas respondem texto puro (ex.: POST /users) ou nada (204).
+  if (!response.headers.get('content-type')?.includes('application/json')) return undefined as T;
   return response.json() as Promise<T>;
 }

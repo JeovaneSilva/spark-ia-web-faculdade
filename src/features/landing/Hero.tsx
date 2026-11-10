@@ -26,29 +26,29 @@ export const Hero = ({ scrollY, onPrimaryCta, onSecondaryCta }: HeroProps) => {
   return (
     <section
       id="inicio"
-      className="relative -mt-20 flex min-h-screen w-full items-center overflow-hidden pt-20 md:-mt-24 md:pt-24"
+      className="relative -mt-16 flex min-h-[calc(100dvh-1rem)] w-full items-center overflow-hidden pt-16 md:-mt-24 md:min-h-screen md:pt-24"
     >
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-brand-background" />
 
-      <div className="relative mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-14 px-6 py-16 md:flex-row md:px-12">
-        <ScrollReveal className="md:w-1/2" direction="left">
+      <div className="relative mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-10 px-4 py-12 sm:px-6 md:flex-row md:gap-14 md:px-12 md:py-16">
+        <ScrollReveal className="w-full md:w-1/2" direction="left">
           <span className="inline-flex items-center gap-2 rounded-full border border-brand-cyan/30 bg-brand-cyan/10 px-4 py-1.5 text-xs font-semibold tracking-wide text-brand-cyan">
             <Sparkles size={14} className="animate-pulse" />
             IA para sua aprovação no ENEM
           </span>
 
-          <h1 className="mt-5 text-5xl font-bold text-brand-orange md:text-6xl">
+          <h1 className="mt-5 text-4xl font-bold text-brand-orange sm:text-5xl md:text-6xl">
             Spark.ia
           </h1>
-          <h2 className="mt-3 text-3xl font-bold md:text-5xl">
+          <h2 className="mt-3 text-2xl font-bold sm:text-3xl md:text-5xl">
             Sua preparação para o ENEM, mais inteligente e mais eficaz
           </h2>
-          <p className="mt-5 mb-8 max-w-lg text-lg text-content-secondary md:text-xl">
+          <p className="mb-8 mt-5 max-w-lg text-base text-content-secondary sm:text-lg md:text-xl">
             Transforme textos, links e materiais que você já estuda em questões personalizadas,
             flashcards inteligentes e uma rotina de revisão mais focada no que realmente importa para a sua aprovação.
           </p>
 
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
             <div
               ref={magneticRef}
               onMouseMove={onMagneticMove}
@@ -57,7 +57,7 @@ export const Hero = ({ scrollY, onPrimaryCta, onSecondaryCta }: HeroProps) => {
             >
               <Button
                 variant="primary"
-                className="px-10 py-4 text-base shadow-[0_10px_24px_-8px_rgba(255,122,0,0.45)]"
+                className="w-full px-6 py-3 text-base shadow-[0_10px_24px_-8px_rgba(255,122,0,0.45)] sm:w-auto sm:px-10 sm:py-4"
                 onClick={onPrimaryCta}
               >
                 Experimentar agora!
@@ -65,19 +65,19 @@ export const Hero = ({ scrollY, onPrimaryCta, onSecondaryCta }: HeroProps) => {
             </div>
             <Button
               variant="outline"
-              className="px-8 py-4 text-base"
+              className="w-full px-6 py-3 text-base sm:w-auto sm:px-8 sm:py-4"
               onClick={onSecondaryCta}
             >
               Ver funcionalidades
             </Button>
           </div>
 
-          <div className="mt-10 flex flex-wrap gap-3">
+          <div className="mt-8 flex flex-wrap gap-2 sm:mt-10 sm:gap-3">
             {highlights.map((item, index) => {
               const Icon = item.icon;
               return (
                 <ScrollReveal key={item.label} delay={150 + index * 100}>
-                  <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-brand-card/60 px-4 py-2 text-sm text-content-secondary">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-brand-card/60 px-3 py-2 text-xs text-content-secondary sm:px-4 sm:text-sm">
                     <Icon size={16} className="text-brand-cyan" />
                     {item.label}
                   </span>
@@ -87,7 +87,7 @@ export const Hero = ({ scrollY, onPrimaryCta, onSecondaryCta }: HeroProps) => {
           </div>
         </ScrollReveal>
 
-        <div className="relative flex items-center justify-center md:w-2/5">
+        <div className="relative flex w-full items-center justify-center md:w-2/5">
           <div
             className="relative flex items-center justify-center"
             style={{
@@ -100,7 +100,7 @@ export const Hero = ({ scrollY, onPrimaryCta, onSecondaryCta }: HeroProps) => {
             <img
               src={imgLandingPage}
               alt="Ilustração do chatbot Spark.ia"
-              className="relative w-full max-w-md animate-[float-slow_7s_ease-in-out_infinite] md:max-w-lg"
+              className="relative w-full max-w-[19rem] animate-[float-slow_7s_ease-in-out_infinite] sm:max-w-md md:max-w-lg"
             />
 
             <span className="absolute -left-4 top-8 hidden animate-[float-fast_5s_ease-in-out_infinite] items-center gap-2 rounded-card border border-white/10 bg-brand-sidebar/90 px-3 py-2 text-xs font-semibold text-content-primary shadow-[0_8px_24px_-8px_rgba(0,0,0,0.5)] backdrop-blur sm:flex">

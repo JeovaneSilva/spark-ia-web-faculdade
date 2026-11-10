@@ -309,7 +309,7 @@ export const ChatbotPage = () => {
   };
 
   return (
-    <div className="flex h-[calc(100vh-9rem)] min-h-0 w-full gap-4 overflow-hidden">
+    <div className="flex h-[calc(100dvh-5rem)] min-h-0 w-full gap-3 overflow-hidden sm:gap-4 md:h-[calc(100vh-9rem)]">
       <aside className="hidden w-72 min-h-0 flex-col gap-2 overflow-hidden rounded-card bg-brand-sidebar p-4 md:flex">
         <button
           onClick={createNewConversation}
@@ -423,7 +423,7 @@ export const ChatbotPage = () => {
       </aside>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-card bg-brand-card">
-        <div className="flex-1 min-h-0 overflow-y-auto p-6">
+        <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
           {conversation.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-2 text-center text-content-secondary">
               <BrainCircuit size={48} className="text-brand-cyan" />
@@ -488,7 +488,7 @@ export const ChatbotPage = () => {
           )}
         </div>
 
-        <form onSubmit={handleSend} className="flex flex-col gap-2 border-t border-white/5 p-4">
+        <form onSubmit={handleSend} className="flex flex-col gap-2 border-t border-white/5 p-3 sm:p-4">
           <textarea
             value={content}
             onChange={(event) => setContent(event.target.value)}

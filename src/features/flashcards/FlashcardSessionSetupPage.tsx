@@ -109,15 +109,15 @@ export const FlashcardSessionSetupPage = () => {
             })}
           </ul>
 
-          <div className="fixed bottom-8 right-8 flex items-center gap-4 rounded-card bg-brand-sidebar p-4 shadow-card">
-            <span className="text-sm text-content-secondary">
+          <div className="fixed inset-x-3 bottom-3 flex items-center justify-between gap-3 rounded-card bg-brand-sidebar p-3 shadow-card sm:inset-x-auto sm:bottom-8 sm:right-8 sm:gap-4 sm:p-4">
+            <span className="min-w-0 text-xs text-content-secondary sm:text-sm">
               {totalSelected === 0
                 ? 'Nenhum cartão selecionado'
                 : totalSelected === 1
                   ? '1 cartão selecionado'
                   : `${totalSelected} cartões selecionados`}
             </span>
-            <Button variant="primary" disabled={totalSelected === 0} onClick={handleStart}>
+            <Button variant="primary" className="shrink-0 px-4 sm:px-6" disabled={totalSelected === 0} onClick={handleStart}>
               <Play size={16} />
               Começar
             </Button>

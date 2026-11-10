@@ -146,7 +146,7 @@ export const QuestionDetailPage = () => {
         </Card>
       )}
 
-      <div className="fixed bottom-8 right-8 flex gap-2">
+      <div className="fixed bottom-3 right-3 flex gap-2 sm:bottom-8 sm:right-8">
         <Button variant="primary" disabled={examNumber <= 1} onClick={() => goTo(examNumber - 1)}>
           <ArrowLeft size={18} />
         </Button>

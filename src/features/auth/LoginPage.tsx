@@ -41,7 +41,7 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="relative flex h-screen w-full items-center justify-center overflow-hidden bg-brand-background px-4 py-4">
+    <div className="relative flex min-h-dvh w-full items-center justify-center overflow-y-auto bg-brand-background px-3 py-6 sm:px-4 sm:py-4">
       <GlowBlob color="cyan" className="-top-32 -left-32 h-96 w-96" />
       <GlowBlob color="orange" className="-bottom-32 -right-24 h-96 w-96" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(11,42,59,0.6)_100%)]" />
@@ -72,7 +72,7 @@ export const LoginPage = () => {
             <div className="text-xs text-content-disabled">Acesso seguro e criptografado.</div>
           </div>
 
-          <div className="flex w-full flex-col gap-4 p-6 md:w-3/5 md:p-10">
+          <div className="flex w-full flex-col gap-4 p-5 sm:p-6 md:w-3/5 md:p-10">
             <div className="flex items-center gap-2 text-brand-cyan md:hidden">
               <BrainCircuit size={22} />
               <span className="text-base font-bold text-content-primary">Spark.ia</span>
