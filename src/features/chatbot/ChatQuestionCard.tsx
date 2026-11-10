@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { submitAnswer, type AnswerOption, type AnswerResult } from '../questions/questionsApi';
@@ -7,63 +7,21 @@ import { findSubjectByValue } from '../../lib/subjects';
 import { ApiError } from '../../lib/httpClient';
 
 const OPTION_LETTERS: AnswerOption[] = ['A', 'B', 'C', 'D', 'E'];
-const ANSWERS_STORAGE_KEY = 'sparkia-chatbot-answers-v1';
-
-interface PersistedAnswerState {
-  selected: AnswerOption | null;
-  result: AnswerResult | null;
-}
-
-const readPersistedAnswerState = (questionId: string): PersistedAnswerState | null => {
-  try {
-    const raw = window.localStorage.getItem(ANSWERS_STORAGE_KEY);
-    if (!raw) return null;
-
-    const parsed = JSON.parse(raw) as Record<string, PersistedAnswerState>;
-    return parsed[questionId] ?? null;
-  } catch {
-    return null;
-  }
-};
-
-const persistAnswerState = (questionId: string, value: PersistedAnswerState | null) => {
-  try {
-    const raw = window.localStorage.getItem(ANSWERS_STORAGE_KEY);
-    const parsed = raw ? (JSON.parse(raw) as Record<string, PersistedAnswerState>) : {};
-
-    if (!value) {
-      delete parsed[questionId];
-      if (Object.keys(parsed).length === 0) {
-        window.localStorage.removeItem(ANSWERS_STORAGE_KEY);
-        return;
-      }
-
-      window.localStorage.setItem(ANSWERS_STORAGE_KEY, JSON.stringify(parsed));
-      return;
-    }
-
-    window.localStorage.setItem(
-      ANSWERS_STORAGE_KEY,
-      JSON.stringify({
-        ...parsed,
-        [questionId]: value,
-      }),
-    );
-  } catch {
-    // ignora falha de persistência em navegadores restritivos
-  }
-};
 
 export const ChatQuestionCard = ({ question }: { question: GeneratedQuestion }) => {
-  const persistedAnswer = readPersistedAnswerState(question.id_question);
-  const [selected, setSelected] = useState<AnswerOption | null>(persistedAnswer?.selected ?? null);
-  const [result, setResult] = useState<AnswerResult | null>(persistedAnswer?.result ?? null);
+  const [selected, setSelected] = useState<AnswerOption | null>(question.myAttempt?.userAnswer ?? null);
+  const [result, setResult] = useState<AnswerResult | null>(
+    question.myAttempt
+      ? {
+          isCorrect: question.myAttempt.isCorrect,
+          userAnswer: question.myAttempt.userAnswer,
+          correctOption: question.correctOption,
+          explanation: question.explanation,
+        }
+      : null,
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    persistAnswerState(question.id_question, { selected, result });
-  }, [question.id_question, result, selected]);
 
   const alternatives: Record<AnswerOption, string> = {
     A: question.optionA,
@@ -87,7 +45,7 @@ export const ChatQuestionCard = ({ question }: { question: GeneratedQuestion }) 
     }
   };
 
-  const subjectLabel = findSubjectByValue(question.subject)?.label ?? question.subject;
+  const subjectLabel = question.subject ? findSubjectByValue(question.subject)?.label ?? question.subject : 'Questão gerada';
 
   return (
     <div className="flex flex-col gap-3 rounded-card border border-white/10 bg-brand-background/60 p-4">

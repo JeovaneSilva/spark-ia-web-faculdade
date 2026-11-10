@@ -11,7 +11,7 @@ import { ChatQuestionCard } from './ChatQuestionCard';
 import { ApiError } from '../../lib/httpClient';
 
 interface ChatMessage {
-  id: number;
+  id: string | number;
   sender: 'Você' | 'Spark';
   kind: 'text' | 'loading' | 'questions';
   text?: string;
@@ -25,59 +25,45 @@ interface ChatSession {
   messages: ChatMessage[];
 }
 
-const STORAGE_KEY = 'sparkia-chatbot-history-v1';
 let nextId = 1;
 
-const createSessionId = () => {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID();
-  }
-
-  return `chat-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-};
-
-const readStoredSessions = (): ChatSession[] => {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-
-    const parsed = JSON.parse(raw) as ChatSession[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-};
-
-const persistSessions = (sessions: ChatSession[]) => {
-  try {
-    if (sessions.length === 0) {
-      window.localStorage.removeItem(STORAGE_KEY);
-      return;
-    }
-
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
-  } catch {
-    // Ignora falhas de persistência em ambientes restritivos.
-  }
-};
-
 const createEmptySession = (title = 'Nova conversa'): ChatSession => ({
-  id: createSessionId(),
+  id: `draft-${Date.now()}-${nextId++}`,
   title,
   updatedAt: Date.now(),
   messages: [],
 });
 
-// Um texto colado inteiro (artigo grande) não precisa aparecer por completo
-// na bolha da conversa -- só serve pra lembrar o que foi pedido.
 const MESSAGE_PREVIEW_CHARS = 280;
 
 function previewText(text: string): string {
   return text.length > MESSAGE_PREVIEW_CHARS ? `${text.slice(0, MESSAGE_PREVIEW_CHARS)}…` : text;
 }
 
+const toChatSession = (session: Awaited<ReturnType<typeof listChatbotSessions>>[number]): ChatSession => {
+  const prompt = session.inputContent || session.requestedTopic || 'Nova conversa';
+  return {
+    id: session.id_chatbot_session,
+    title: session.requestedTopic || previewText(prompt),
+    updatedAt: new Date(session.createdAt).getTime(),
+    messages: [
+      { id: `${session.id_chatbot_session}-user`, sender: 'Você', kind: 'text', text: prompt },
+      {
+        id: `${session.id_chatbot_session}-assistant`,
+        sender: 'Spark',
+        kind: 'questions',
+        text:
+          session.questions.length === 1
+            ? 'Gerei 1 questão sobre isso:'
+            : `Gerei ${session.questions.length} questões sobre isso:`,
+        questions: session.questions,
+      },
+    ],
+  };
+};
+
 export const ChatbotPage = () => {
-  const [sessions, setSessions] = useState<ChatSession[]>(() => readStoredSessions());
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [draftSessionTitle, setDraftSessionTitle] = useState('');
@@ -93,37 +79,14 @@ export const ChatbotPage = () => {
         const apiSessions = await listChatbotSessions();
         if (!isMounted) return;
 
-        const localSessions = readStoredSessions();
-        const localById = new Map(localSessions.map((session) => [session.id, session]));
-
-        const merged = apiSessions.map((session) => {
-          const local = localById.get(session.id_chatbot_session);
-          return {
-            id: session.id_chatbot_session,
-            title: local?.title || session.requestedTopic || 'Nova conversa',
-            updatedAt: local?.updatedAt ?? new Date(session.createdAt).getTime(),
-            messages: local?.messages ?? [],
-          } satisfies ChatSession;
-        });
-
-        const extras = localSessions.filter(
-          (local) => !apiSessions.some((session) => session.id_chatbot_session === local.id),
-        );
-
-        const nextSessions = [...extras, ...merged].sort((a, b) => b.updatedAt - a.updatedAt);
+        const nextSessions = apiSessions.map(toChatSession);
         setSessions(nextSessions);
-        persistSessions(nextSessions);
 
         if (nextSessions.length > 0 && !activeSessionId) {
           setActiveSessionId(nextSessions[0].id);
         }
       } catch {
         if (!isMounted) return;
-        const localSessions = readStoredSessions();
-        setSessions(localSessions);
-        if (localSessions.length > 0 && !activeSessionId) {
-          setActiveSessionId(localSessions[0].id);
-        }
       }
     };
 
@@ -132,10 +95,6 @@ export const ChatbotPage = () => {
       isMounted = false;
     };
   }, []);
-
-  useEffect(() => {
-    persistSessions(sessions);
-  }, [sessions]);
 
   useEffect(() => {
     if (sessions.length === 0) {
@@ -226,12 +185,11 @@ export const ChatbotPage = () => {
     const trimmed = content.trim();
     if (!trimmed || isGenerating) return;
 
-    const sessionId = activeSessionId ?? createSessionId();
+    const sessionId = createEmptySession().id;
     const userMessageId = nextId++;
     const loadingId = nextId++;
 
-    const currentSession =
-      sessions.find((session) => session.id === sessionId) ?? createEmptySession(trimmed.slice(0, 40) || 'Nova conversa');
+    const currentSession = createEmptySession(trimmed.slice(0, 40) || 'Nova conversa');
 
     const nextMessages: ChatMessage[] = [
       ...currentSession.messages,
@@ -239,24 +197,16 @@ export const ChatbotPage = () => {
       { id: loadingId, sender: 'Spark', kind: 'loading' },
     ];
 
-    setSessions((current) => {
-      const normalized = current.some((session) => session.id === sessionId)
-        ? current
-        : [{ ...currentSession, id: sessionId, messages: [] }, ...current];
-
-      return normalized.map((session) =>
-        session.id === sessionId
-          ? {
-              ...session,
-              id: sessionId,
-              title:
-                session.title === 'Nova conversa' ? previewText(trimmed) : session.title,
-              updatedAt: Date.now(),
-              messages: nextMessages,
-            }
-          : session,
-      );
-    });
+    setSessions((current) => [
+      {
+        ...currentSession,
+        id: sessionId,
+        title: previewText(trimmed),
+        updatedAt: Date.now(),
+        messages: nextMessages,
+      },
+      ...current,
+    ]);
 
     setActiveSessionId(sessionId);
     setContent('');
@@ -264,36 +214,17 @@ export const ChatbotPage = () => {
 
     try {
       const result = await generateQuestions(trimmed, quantity);
-      const resolvedTitle = result.session.requestedTopic || previewText(trimmed);
-
-      setSessions((current) =>
-        current.map((session) =>
-          session.id === sessionId
-            ? {
-                ...session,
-                id: result.session.id_chatbot_session || session.id,
-                title: resolvedTitle,
-                updatedAt: Date.now(),
-                messages: session.messages.map((message) =>
-                  message.id === loadingId
-                    ? {
-                        id: loadingId,
-                        sender: 'Spark',
-                        kind: 'questions',
-                        text:
-                          result.questions.length === 1
-                            ? 'Gerei 1 questão sobre isso:'
-                            : `Gerei ${result.questions.length} questões sobre isso:`,
-                        questions: result.questions,
-                      }
-                    : message,
-                ),
-              }
-            : session,
-        ),
-      );
-
-      setActiveSessionId(result.session.id_chatbot_session || sessionId);
+      const savedSession = toChatSession({
+        ...result.session,
+        inputContent: trimmed,
+        createdAt: new Date().toISOString(),
+        questions: result.questions,
+      });
+      setSessions((current) => [
+        savedSession,
+        ...current.filter((session) => session.id !== sessionId),
+      ]);
+      setActiveSessionId(savedSession.id);
     } catch (err) {
       const message = err instanceof ApiError ? err.message : 'Não foi possível gerar as questões agora.';
       updateActiveSession((session) => ({

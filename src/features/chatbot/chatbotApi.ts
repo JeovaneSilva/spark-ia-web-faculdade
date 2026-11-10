@@ -14,7 +14,8 @@ export interface GeneratedQuestion {
   correctOption: AnswerOption;
   explanation: string | null;
   // Classificada pelo backend a partir do conteúdo enviado -- o usuário não escolhe mais.
-  subject: string;
+  subject: string | null;
+  myAttempt?: { userAnswer: AnswerOption; isCorrect: boolean } | null;
 }
 
 export interface GenerateQuestionsResult {
@@ -25,8 +26,9 @@ export interface GenerateQuestionsResult {
 export interface ChatbotSessionSummary {
   id_chatbot_session: string;
   requestedTopic: string;
+  inputContent: string | null;
   createdAt: string;
-  questionsCount: number;
+  questions: GeneratedQuestion[];
 }
 
 export async function listChatbotSessions(): Promise<ChatbotSessionSummary[]> {
