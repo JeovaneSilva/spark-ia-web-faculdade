@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, ImagePlus, X } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
+import { ListSkeleton } from '../../components/ui/Skeleton';
+import { useToast } from '../../components/ui/useToast';
 import { subjects, findSubjectBySlug } from '../../lib/subjects';
 import { createFlashcard, getFlashcard, updateFlashcard, uploadFlashcardImage } from './flashcardsApi';
 import { ApiError } from '../../lib/httpClient';
@@ -16,6 +18,7 @@ export const FlashcardFormPage = () => {
   const { id } = useParams();
   const isEditing = Boolean(id);
   const navigate = useNavigate();
+  const toast = useToast();
   const [searchParams] = useSearchParams();
 
   const [subjectValue, setSubjectValue] = useState(
@@ -95,6 +98,7 @@ export const FlashcardFormPage = () => {
       } else {
         await createFlashcard(data);
       }
+      toast.success(id ? 'Flashcard atualizado.' : 'Flashcard criado.');
       navigate(-1);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Não foi possível salvar o flashcard.');
@@ -118,7 +122,7 @@ export const FlashcardFormPage = () => {
       </header>
 
       {isLoading ? (
-        <p className="text-content-secondary">Carregando...</p>
+        <ListSkeleton rows={2} />
       ) : (
         <Card>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">

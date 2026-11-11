@@ -1,9 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AlertCircle, BrainCircuit, Eye, EyeOff, Lock, Mail, Sparkles, User, UserPlus } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, Lock, Mail, User, UserPlus } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Switch } from '../../components/ui/Switch';
-import { GlowBlob } from '../../components/ui/GlowBlob';
+import { Logo } from '../../components/ui/Logo';
 import { useAuth } from './useAuth';
 import { ApiError } from '../../lib/httpClient';
 
@@ -48,28 +48,20 @@ export const SignupPage = () => {
 
   return (
     <div className="relative flex min-h-dvh w-full items-center justify-center overflow-y-auto bg-brand-background px-3 py-6 sm:px-4 sm:py-4">
-      <GlowBlob color="orange" className="-top-32 -right-32 h-96 w-96" />
-      <GlowBlob color="cyan" className="-bottom-32 -left-24 h-96 w-96" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(11,42,59,0.6)_100%)]" />
-
       <div
-        className={`relative w-full max-w-3xl rounded-card bg-gradient-to-br from-brand-orange/25 via-white/5 to-brand-cyan/20 p-px shadow-glow transition-all duration-700 ease-out ${
+        className={`relative w-full max-w-3xl rounded-card bg-white/10 p-px shadow-card transition-all duration-700 ease-out ${
           isVisible ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'
         }`}
       >
         <div className="flex max-h-full w-full flex-col overflow-hidden rounded-card border border-white/5 bg-brand-sidebar/80 backdrop-blur-sm md:flex-row">
           <div className="hidden w-2/5 flex-col justify-between border-r border-white/5 bg-gradient-to-br from-brand-background to-brand-sidebar p-6 md:flex">
-            <div className="flex items-center gap-2 text-brand-cyan">
-              <BrainCircuit size={26} />
+            <div className="flex items-center gap-2">
+              <Logo className="h-7" />
               <span className="text-lg font-bold text-content-primary">Spark.ia</span>
             </div>
 
             <div className="flex flex-col items-center gap-4 py-6">
-              <div className="relative flex h-32 w-32 items-center justify-center rounded-full border border-brand-orange/40">
-                <div className="absolute inset-0 rounded-full border border-brand-orange/10" />
-                <div className="absolute inset-2 rounded-full border border-brand-orange/20 animate-pulse" />
-                <Sparkles size={44} className="text-brand-orange drop-shadow-[0_0_12px_rgba(255,122,0,0.6)]" />
-              </div>
+              <Logo className="h-32" />
               <p className="max-w-[220px] text-center text-sm text-content-secondary">
                 Crie sua conta e comece a transformar seus estudos agora mesmo.
               </p>
@@ -79,8 +71,8 @@ export const SignupPage = () => {
           </div>
 
           <div className="flex w-full flex-col gap-3 p-5 sm:p-6 md:w-3/5 md:p-8">
-            <div className="flex items-center gap-2 text-brand-cyan md:hidden">
-              <BrainCircuit size={22} />
+            <div className="flex items-center gap-2 md:hidden">
+              <Logo className="h-6" />
               <span className="text-base font-bold text-content-primary">Spark.ia</span>
             </div>
 

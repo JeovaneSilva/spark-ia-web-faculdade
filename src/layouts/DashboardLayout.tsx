@@ -1,13 +1,16 @@
 import { useState, type ReactNode } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutGrid, BookOpen, BrainCircuit, Home, LogOut, Menu, User, X } from 'lucide-react';
+import { LayoutGrid, BookOpen, ClipboardCheck, MessageCircle, Home, LogOut, Menu, User, X } from 'lucide-react';
+import { Logo } from '../components/ui/Logo';
+import { ThemeToggle } from '../components/ui/ThemeToggle';
 import { useAuth } from '../features/auth/useAuth';
 
 const navItems = [
   { to: '/app', label: 'Início', icon: <Home size={20} /> },
-  { to: '/app/chatbot', label: 'ChatBot', icon: <BrainCircuit size={20} /> },
+  { to: '/app/chatbot', label: 'ChatBot', icon: <MessageCircle size={20} /> },
   { to: '/app/flashcards', label: 'Flashcards', icon: <BookOpen size={20} /> },
   { to: '/app/questoes', label: 'Banco de Questões', icon: <LayoutGrid size={20} /> },
+  { to: '/app/simulado', label: 'Simulado', icon: <ClipboardCheck size={20} /> },
 ];
 
 export const DashboardLayout = () => {
@@ -23,9 +26,18 @@ export const DashboardLayout = () => {
 
   return (
     <div className="flex min-h-dvh flex-col bg-brand-background md:h-screen md:flex-row md:overflow-hidden">
+      <a
+        href="#conteudo"
+        className="sr-only z-50 rounded-button bg-brand-orange px-4 py-2 font-semibold text-white focus:not-sr-only focus:absolute focus:top-2 focus:left-2"
+      >
+        Ir para o conteúdo
+      </a>
       {/* Sidebar - Desktop */}
       <aside className="hidden w-64 flex-col gap-8 border-r border-white/5 bg-brand-sidebar p-4 md:flex">
-        <div className="text-brand-orange font-bold text-2xl px-2">Spark.ia</div>
+        <Link to="/app" className="flex items-center gap-3 px-2 text-2xl font-bold text-brand-orange hover:text-brand-orange">
+          <Logo className="h-9" />
+          Spark.ia
+        </Link>
 
         <nav className="flex flex-col gap-2">
           {navItems.map((item) => (
@@ -48,23 +60,30 @@ export const DashboardLayout = () => {
             <User size={16} />
             <span className="truncate">{user?.name ?? 'Você'}</span>
           </span>
-          <button
-            onClick={handleLogout}
-            aria-label="Sair"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/5 hover:text-white"
-          >
-            <LogOut size={16} />
-          </button>
+          <div className="flex shrink-0 items-center gap-1">
+            <ThemeToggle className="h-8 w-8" />
+            <button
+              onClick={handleLogout}
+              aria-label="Sair"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/5 hover:text-white"
+            >
+              <LogOut size={16} />
+            </button>
+          </div>
         </div>
       </aside>
 
       <header className="relative flex items-center justify-between bg-brand-sidebar p-4 md:hidden">
-        <span className="text-brand-orange font-bold text-xl">Spark.ia</span>
+        <Link to="/app" className="flex items-center gap-2 text-xl font-bold text-brand-orange hover:text-brand-orange">
+          <Logo className="h-8" />
+          Spark.ia
+        </Link>
         <div className="flex items-center gap-3">
           <span className="hidden items-center gap-1.5 text-sm text-content-secondary sm:flex">
             <User size={16} />
             {user?.name ?? 'Você'}
           </span>
+          <ThemeToggle />
           <button onClick={handleLogout} aria-label="Sair" className="text-white">
             <LogOut size={20} />
           </button>
@@ -91,7 +110,7 @@ export const DashboardLayout = () => {
         )}
       </header>
 
-      <main className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 overflow-x-hidden overflow-y-auto p-3 sm:p-4 md:p-8">
+      <main id="conteudo" tabIndex={-1} className="mx-auto flex outline-none min-h-0 w-full max-w-7xl flex-1 overflow-x-hidden overflow-y-auto p-3 sm:p-4 md:p-8">
         <div className="w-full min-w-0">
           <Outlet />
         </div>

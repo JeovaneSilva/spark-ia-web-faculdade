@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, User, X } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../auth/useAuth';
-import whiteLogo from '../../assets/images/whiteLogo.png';
+import { Logo } from '../../components/ui/Logo';
+import { ThemeToggle } from '../../components/ui/ThemeToggle';
 
 const navItems = [
   { href: '#inicio', label: 'Início' },
@@ -31,16 +32,13 @@ export const Header = () => {
   return (
     <header className="fixed top-0 z-50 w-full bg-brand-sidebar px-6 py-3 md:px-10">
       <nav className="flex items-center justify-between">
-        <Link to="/" className="group flex items-center gap-3">
-          <img
-            src={whiteLogo}
-            alt="logo Spark.ia"
-            className="w-9 transition-transform duration-300 group-hover:rotate-12"
-          />
+        <Link to="/" className="flex items-center gap-3">
+          <Logo className="w-9" />
           <span className="text-xl font-bold text-content-primary md:text-2xl">Spark.ia</span>
         </Link>
 
-        <div className="md:hidden">
+        <div className="flex items-center gap-1 md:hidden">
+          <ThemeToggle />
           <button
             onClick={toggleMenu}
             aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
@@ -71,10 +69,9 @@ export const Header = () => {
                 <a
                   href={item.href}
                   onClick={closeMenu}
-                  className="group relative block w-full px-5 py-3 text-center text-content-secondary transition-colors hover:text-brand-orange md:inline-block md:w-auto md:px-0 md:py-1 md:text-center"
+                  className="block w-full px-5 py-3 text-center text-content-secondary transition-colors hover:text-brand-orange md:inline-block md:w-auto md:px-0 md:py-1"
                 >
                   {item.label}
-                  <span className="absolute inset-x-5 bottom-1 hidden h-px origin-left scale-x-0 bg-brand-orange transition-transform duration-300 group-hover:scale-x-100 md:inset-x-0 md:block" />
                 </a>
               </li>
             ))}
@@ -93,6 +90,7 @@ export const Header = () => {
         </ul>
 
         <div className="hidden items-center gap-3 md:flex">
+          <ThemeToggle />
           {isAuthenticated ? (
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1.5 text-sm text-content-secondary">

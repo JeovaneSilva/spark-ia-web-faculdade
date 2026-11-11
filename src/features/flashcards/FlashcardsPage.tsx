@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Plus } from 'lucide-react';
+import { List, Play, Plus } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
+import { SubjectGridSkeleton } from '../../components/ui/Skeleton';
 import { subjects } from '../../lib/subjects';
-import { listFlashcards, type Flashcard } from './flashcardsApi';
+import { isCardDue, listFlashcards, type Flashcard } from './flashcardsApi';
 import { ApiError } from '../../lib/httpClient';
 
 export const FlashcardsPage = () => {
@@ -20,6 +21,8 @@ export const FlashcardsPage = () => {
   }, []);
 
   const countBySubject = (value: string) => cards?.filter((card) => card.subject === value).length ?? 0;
+  const dueBySubject = (value: string) =>
+    cards?.filter((card) => card.subject === value && isCardDue(card)).length ?? 0;
 
   return (
     <div className="flex flex-col gap-6">
@@ -29,6 +32,10 @@ export const FlashcardsPage = () => {
           <p className="text-content-secondary">Revise seus flashcards ou crie novos.</p>
         </div>
         <div className="flex flex-wrap gap-3">
+          <Button variant="outline" onClick={() => navigate('/app/flashcards/todos')}>
+            <List size={18} />
+            Ver todos
+          </Button>
           <Button variant="outline" onClick={() => navigate('/app/flashcards/novo')}>
             <Plus size={18} />
             Novo Flashcard
@@ -41,11 +48,13 @@ export const FlashcardsPage = () => {
       </header>
 
       {error && <p className="text-status-error">{error}</p>}
+      {!error && !cards && <SubjectGridSkeleton count={subjects.length} />}
 
-      <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+      <ul hidden={!cards} className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
         {subjects.map((subject) => {
           const Icon = subject.icon;
           const count = countBySubject(subject.value);
+          const due = dueBySubject(subject.value);
           return (
             <li key={subject.slug}>
               <button
@@ -60,6 +69,11 @@ export const FlashcardsPage = () => {
                 <span className="text-sm text-content-secondary">
                   {count === 0 ? 'Nenhum cartão' : count === 1 ? '1 cartão' : `${count} cartões`}
                 </span>
+                {due > 0 && (
+                  <span className="rounded-full bg-brand-orange/15 px-2 py-0.5 text-xs font-semibold text-brand-orange">
+                    {due} para revisar
+                  </span>
+                )}
               </button>
             </li>
           );

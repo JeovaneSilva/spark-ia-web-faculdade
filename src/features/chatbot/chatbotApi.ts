@@ -67,3 +67,33 @@ export async function generateQuestions(content: string, quantity: number): Prom
     fallbackErrorMessage: 'Não foi possível gerar as questões agora. Tente novamente.',
   });
 }
+
+export interface FlashcardDraft {
+  question: string;
+  answer: string;
+  subject: string;
+}
+
+// A IA condensa a questão em um cartão curto; quem salva é createFlashcard.
+export async function requestFlashcardDraft(id_question: string): Promise<FlashcardDraft> {
+  return apiRequest<FlashcardDraft>(`/chatbot/questions/${id_question}/flashcard`, {
+    method: 'POST',
+    token: getToken() ?? undefined,
+    errorMessages: {
+      503: 'O gerador está sobrecarregado no momento. Tente novamente em instantes.',
+    },
+    fallbackErrorMessage: 'Não foi possível criar o flashcard agora.',
+  });
+}
+
+// Tutor: explica por que a última resposta do aluno nessa questão está errada.
+export async function requestMistakeExplanation(id_question: string): Promise<{ explanation: string }> {
+  return apiRequest<{ explanation: string }>(`/chatbot/questions/${id_question}/explain`, {
+    method: 'POST',
+    token: getToken() ?? undefined,
+    errorMessages: {
+      503: 'O tutor está sobrecarregado no momento. Tente novamente em instantes.',
+    },
+    fallbackErrorMessage: 'Não foi possível gerar a explicação agora.',
+  });
+}

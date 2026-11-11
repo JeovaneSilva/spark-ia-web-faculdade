@@ -5,7 +5,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export const Button = ({ variant = 'primary', className = '', ...props }: ButtonProps) => {
-  const baseStyles = "transition-all duration-200 font-semibold flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50";
+  const baseStyles = "transition-colors duration-200 font-semibold flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50";
   
   const variants = {
     primary: "bg-brand-orange text-white hover:bg-brand-orange-hover rounded-button px-6 py-3",

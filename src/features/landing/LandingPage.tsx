@@ -8,7 +8,6 @@ import { Hero } from './Hero';
 import { FeaturesScrollytelling } from './FeaturesScrollytelling';
 import { HowItWorksSection } from './HowItWorksSection';
 import { AboutSection } from './AboutSection';
-import { useWindowScrollY } from '../../hooks/useWindowScrollY';
 import imgChatbot from '../../assets/illustrations/imgChatbot.svg';
 import imgFlashcards from '../../assets/illustrations/imgFlashcards.svg';
 import imgQuestoes from '../../assets/illustrations/imgQuestoes.svg';
@@ -36,7 +35,6 @@ const features = [
 
 export const LandingPage = () => {
   const navigate = useNavigate();
-  const scrollY = useWindowScrollY();
 
   const goToChatbot = () => navigate('/app/chatbot');
   const scrollToFeatures = () =>
@@ -47,7 +45,7 @@ export const LandingPage = () => {
       <Header />
 
       <main className="w-full pt-20 md:pt-24">
-        <Hero scrollY={scrollY} onPrimaryCta={goToChatbot} onSecondaryCta={scrollToFeatures} />
+        <Hero onPrimaryCta={goToChatbot} onSecondaryCta={scrollToFeatures} />
 
         <section id="funcionalidades" className="relative w-full bg-brand-sidebar px-4 py-12 sm:px-6 sm:py-16 md:px-12">
           <SectionFade fromClass="from-brand-background" />

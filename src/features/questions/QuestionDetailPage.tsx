@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, CheckCircle2, Grid3x3, XCircle } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
+import { ListSkeleton } from '../../components/ui/Skeleton';
+import { MistakeExplainer } from './MistakeExplainer';
 import {
   getEnemProgress,
   getEnemQuestion,
@@ -101,12 +103,12 @@ export const QuestionDetailPage = () => {
           {progress === null ? (
             <p className="text-content-secondary">Carregando...</p>
           ) : (
-            <div className="grid grid-cols-8 gap-2 sm:grid-cols-12 md:grid-cols-[repeat(15,minmax(0,1fr))]">
+            <div className="grid grid-cols-6 gap-2 min-[400px]:grid-cols-8 sm:grid-cols-12 md:grid-cols-[repeat(15,minmax(0,1fr))]">
               {progress.map((item) => (
                 <button
                   key={item.examNumber}
                   onClick={() => goTo(item.examNumber)}
-                  className={`flex h-10 w-10 items-center justify-center rounded-button text-sm font-semibold transition-colors ${
+                  className={`flex h-10 w-full items-center justify-center rounded-button text-sm font-semibold transition-colors ${
                     item.examNumber === examNumber
                       ? 'bg-brand-orange text-white'
                       : item.isCorrect === true
@@ -126,13 +128,13 @@ export const QuestionDetailPage = () => {
 
       {error && <Card>{error}</Card>}
 
-      {!error && !question && <p className="text-content-secondary">Carregando questão...</p>}
+      {!error && !question && <ListSkeleton rows={3} />}
 
       {question && (
         <Card>
           <div className="flex flex-col gap-3 text-content-secondary">
             {question.statement.split('\n').map((paragraph, ind) => (
-              <p key={ind} className="text-justify">
+              <p key={ind} className="text-left sm:text-justify">
                 {paragraph}
               </p>
             ))}
@@ -256,6 +258,7 @@ const AnswerPanel = ({ question }: { question: EnemQuestion }) => {
               {result.isCorrect ? 'Você acertou!' : 'Você errou.'} Resposta correta: alternativa {result.correctOption}
             </p>
             {result.explanation && <p className="text-content-secondary">{result.explanation}</p>}
+            {!result.isCorrect && <MistakeExplainer questionId={question.id_question} />}
             <Button variant="outline" className="w-fit" onClick={handleRetry}>
               Responder novamente
             </Button>

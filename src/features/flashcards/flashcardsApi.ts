@@ -15,7 +15,13 @@ export interface Flashcard {
   createdAt: string;
   updatedAt: string;
   lastReviewedAt: string | null;
+  // Revisão espaçada: só vêm na listagem (GET /flashcards).
+  isDue?: boolean;
+  nextReviewAt?: string | null;
 }
+
+// Sem a informação da API, o cartão conta como pendente.
+export const isCardDue = (card: Flashcard) => card.isDue !== false;
 
 export interface FlashcardInput {
   question?: string;

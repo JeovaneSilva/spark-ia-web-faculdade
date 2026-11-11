@@ -1,4 +1,4 @@
-import { BrainCircuit, FileText, Sparkles, type LucideIcon } from 'lucide-react';
+import { FileText, Layers, ListChecks, type LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useInView } from '../../hooks/useInView';
 import { useScrollProgress } from '../../hooks/useScrollProgress';
@@ -18,12 +18,12 @@ const steps: Step[] = [
     text: 'Cole um material de estudo, um artigo ou o link de uma aula.',
   },
   {
-    icon: BrainCircuit,
+    icon: ListChecks,
     title: 'A IA extrai os tópicos',
     text: 'O Spark.ia analisa o conteúdo e identifica os pontos principais.',
   },
   {
-    icon: Sparkles,
+    icon: Layers,
     title: 'Estude com questões e flashcards',
     text: 'Pratique na hora com questões e flashcards gerados a partir do que você enviou.',
   },

@@ -20,7 +20,7 @@ export const FeaturesScrollytelling = ({ features }: FeaturesScrollytellingProps
       <div className="hidden md:block">
         <div className="sticky top-24 flex h-[calc(100vh-6rem)] flex-col items-center justify-center gap-10">
           <div className="relative flex items-center justify-center">
-            <div className="absolute h-[clamp(20rem,38vw,32rem)] w-[clamp(20rem,38vw,32rem)] animate-[spin-slow_22s_linear_infinite] rounded-full border border-dashed border-brand-cyan/15" />
+            <div className="absolute h-[clamp(20rem,38vw,32rem)] w-[clamp(20rem,38vw,32rem)] rounded-full border border-dashed border-brand-cyan/15" />
             <div className="absolute h-[clamp(17rem,32vw,27rem)] w-[clamp(17rem,32vw,27rem)] rounded-full border border-brand-orange/15" />
 
             <div className="relative flex h-[clamp(18rem,34vw,29rem)] w-[clamp(18rem,34vw,29rem)] items-center justify-center rounded-card bg-gradient-to-br from-brand-cyan/6 via-brand-card to-brand-orange/6 shadow-glow">

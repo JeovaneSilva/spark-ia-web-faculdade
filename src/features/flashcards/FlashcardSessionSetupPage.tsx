@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Play } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
+import { SubjectGridSkeleton } from '../../components/ui/Skeleton';
 import { Card } from '../../components/ui/Card';
+import { Switch } from '../../components/ui/Switch';
 import { subjects } from '../../lib/subjects';
-import { listFlashcards, type Flashcard } from './flashcardsApi';
+import { isCardDue, listFlashcards, type Flashcard } from './flashcardsApi';
 import { ApiError } from '../../lib/httpClient';
 
 export const FlashcardSessionSetupPage = () => {
@@ -12,17 +14,25 @@ export const FlashcardSessionSetupPage = () => {
   const [cards, setCards] = useState<Flashcard[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  // Revisão espaçada: por padrão estuda só o que está pendente hoje.
+  const [onlyDue, setOnlyDue] = useState(true);
 
   useEffect(() => {
     listFlashcards()
-      .then(setCards)
+      .then((all) => {
+        setCards(all);
+        if (!all.some(isCardDue)) setOnlyDue(false);
+      })
       .catch((err) => {
         setError(err instanceof ApiError ? err.message : 'Não foi possível carregar seus flashcards.');
       });
   }, []);
 
-  const countBySubject = (value: string) => cards?.filter((card) => card.subject === value).length ?? 0;
-  const availableSubjects = subjects.filter((subject) => countBySubject(subject.value) > 0);
+  const countBySubject = (value: string) =>
+    cards?.filter((card) => card.subject === value && (!onlyDue || isCardDue(card))).length ?? 0;
+  const availableSubjects = subjects.filter((subject) =>
+    cards?.some((card) => card.subject === subject.value),
+  );
   const allSelected = availableSubjects.length > 0 && availableSubjects.every((s) => selected.has(s.slug));
   const totalSelected = subjects
     .filter((subject) => selected.has(subject.slug))
@@ -42,8 +52,8 @@ export const FlashcardSessionSetupPage = () => {
   };
 
   const handleStart = () => {
-    if (selected.size === 0) return;
-    navigate(`/app/flashcards/sessao?materias=${[...selected].join(',')}`);
+    if (totalSelected === 0) return;
+    navigate(`/app/flashcards/sessao?materias=${[...selected].join(',')}${onlyDue ? '&pendentes=1' : ''}`);
   };
 
   return (
@@ -62,7 +72,7 @@ export const FlashcardSessionSetupPage = () => {
       </header>
 
       {error && <p className="text-status-error">{error}</p>}
-      {!error && !cards && <p className="text-content-secondary">Carregando...</p>}
+      {!error && !cards && <SubjectGridSkeleton />}
 
       {cards && availableSubjects.length === 0 && (
         <Card>
@@ -77,9 +87,14 @@ export const FlashcardSessionSetupPage = () => {
 
       {cards && availableSubjects.length > 0 && (
         <>
-          <Button variant="outline" className="w-fit" onClick={toggleAll}>
-            {allSelected ? 'Limpar seleção' : 'Selecionar todas'}
-          </Button>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <Button variant="outline" className="w-fit" onClick={toggleAll}>
+              {allSelected ? 'Limpar seleção' : 'Selecionar todas'}
+            </Button>
+            <div className="sm:max-w-xs">
+              <Switch checked={onlyDue} onChange={setOnlyDue} label="Apenas cartões pendentes de revisão" />
+            </div>
+          </div>
 
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
             {availableSubjects.map((subject) => {
@@ -102,6 +117,7 @@ export const FlashcardSessionSetupPage = () => {
                     <span className="text-sm font-semibold">{subject.label}</span>
                     <span className="text-xs text-content-secondary">
                       {count === 1 ? '1 cartão' : `${count} cartões`}
+                      {onlyDue ? ' pendentes' : ''}
                     </span>
                   </button>
                 </li>
@@ -112,7 +128,9 @@ export const FlashcardSessionSetupPage = () => {
           <div className="fixed inset-x-3 bottom-3 flex items-center justify-between gap-3 rounded-card bg-brand-sidebar p-3 shadow-card sm:inset-x-auto sm:bottom-8 sm:right-8 sm:gap-4 sm:p-4">
             <span className="min-w-0 text-xs text-content-secondary sm:text-sm">
               {totalSelected === 0
-                ? 'Nenhum cartão selecionado'
+                ? onlyDue && selected.size > 0
+                  ? 'Nada pendente nas disciplinas escolhidas'
+                  : 'Nenhum cartão selecionado'
                 : totalSelected === 1
                   ? '1 cartão selecionado'
                   : `${totalSelected} cartões selecionados`}

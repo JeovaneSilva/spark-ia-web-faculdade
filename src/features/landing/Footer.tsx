@@ -2,7 +2,7 @@ import { Instagram, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
 import { ScrollReveal } from '../../components/ui/ScrollReveal';
-import whiteLogo from '../../assets/images/whiteLogo.png';
+import { Logo } from '../../components/ui/Logo';
 
 const navLinks = [
   { href: '#inicio', label: 'Início' },
@@ -16,7 +16,7 @@ export const Footer = () => (
     <ScrollReveal className="relative mx-auto grid max-w-6xl gap-12 md:grid-cols-[1.3fr_1fr_1fr]">
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
-          <img src={whiteLogo} alt="logo Spark.ia" className="w-10" />
+          <Logo className="w-10" />
           <span className="text-2xl font-bold text-content-primary">Spark.ia</span>
         </div>
         <p className="max-w-xs text-sm text-content-secondary">
@@ -50,7 +50,7 @@ export const Footer = () => (
             <li key={link.href}>
               <a
                 href={link.href}
-                className="inline-block text-content-secondary transition-all hover:translate-x-1 hover:text-brand-orange"
+                className="inline-block text-content-secondary transition-colors hover:text-brand-orange"
               >
                 {link.label}
               </a>

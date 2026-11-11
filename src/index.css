@@ -22,7 +22,8 @@
   /* Cores de Texto */
   --color-content-primary: #FFFFFF;
   --color-content-secondary: #B0BEC5;
-  --color-content-disabled: #607D8B;
+  /* Mais claro que antes (#607D8B) para passar no contraste mínimo sobre o fundo escuro */
+  --color-content-disabled: #7F98A5;
 
   /* Bordas */
   --radius-card: 16px;
@@ -34,6 +35,42 @@
 
   /* Fontes */
   --font-inter: "Inter", sans-serif;
+}
+
+/* Modo claro: ativado por <html data-theme="light"> (ver useTheme). Sem layer
+   para vencer os tokens do @theme. --color-white também inverte, então os
+   utilitários translúcidos (bg-white/5, border-white/10...) viram tintas
+   escuras sobre fundo claro. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-brand-background: #F3F6F9;
+  --color-brand-card: #FFFFFF;
+  --color-brand-sidebar: #E6EDF2;
+  --color-brand-cyan: #0E8FA8;
+  --color-brand-cyan-soft: #0E8FA8;
+  --color-status-success: #1E9E55;
+  --color-status-error: #D13B2B;
+  --color-status-warning: #9A7B0A;
+  --color-content-primary: #0B2A3B;
+  --color-content-secondary: #45606F;
+  --color-content-disabled: #6B8493;
+  --color-white: #0B2A3B;
+}
+
+/* Texto sobre o laranja da marca continua branco nos dois temas. */
+:root[data-theme="light"] .bg-brand-orange {
+  color: #fff;
+}
+
+/* Logo: versão clara no tema escuro, versão escura no tema claro. */
+.logo-light-theme {
+  display: none;
+}
+:root[data-theme="light"] .logo-dark-theme {
+  display: none;
+}
+:root[data-theme="light"] .logo-light-theme {
+  display: inline-block;
 }
 
 /* 2. APLICAÇÃO DOS ESTILOS BASE */
@@ -55,20 +92,42 @@
     font-family: var(--font-inter);
   }
 
-  h1 { 
-    font-size: 32px; 
-    font-weight: 700; 
-    line-height: 1.2; 
+  h1 {
+    font-size: clamp(1.5rem, 1.1rem + 1.8vw, 2rem);
+    font-weight: 700;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
   }
-  
-  h2 { 
-    font-size: 24px; 
-    font-weight: 600; 
+
+  h2 {
+    font-size: clamp(1.25rem, 1rem + 1vw, 1.5rem);
+    font-weight: 600;
   }
-  
-  h3 { 
-    font-size: 20px; 
-    font-weight: 600; 
+
+  h3 {
+    font-size: clamp(1.0625rem, 1rem + 0.4vw, 1.25rem);
+    font-weight: 600;
+  }
+
+  img {
+    max-width: 100%;
+  }
+
+  /* Foco visível para quem navega por teclado (campos têm o próprio estilo de borda) */
+  :focus-visible {
+    outline: 2px solid var(--color-brand-cyan);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 
   a {
@@ -117,16 +176,32 @@
   }
 }
 
-@keyframes float-slow {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-16px) rotate(1deg); }
+/* Virada do flashcard (rotateY 3D). As faces usam backface-visibility. */
+.flip-scene {
+  perspective: 1400px;
 }
 
-@keyframes float-fast {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+.flip-inner {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1);
 }
 
-@keyframes spin-slow {
-  to { transform: rotate(360deg); }
+.flip-inner[data-flipped="true"] {
+  transform: rotateY(180deg);
+}
+
+.flip-face {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.flip-back {
+  transform: rotateY(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flip-inner {
+    transition-duration: 0.01ms;
+  }
 }

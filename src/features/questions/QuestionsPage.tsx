@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
+import { ListSkeleton } from '../../components/ui/Skeleton';
 import { listEnemYears } from './questionsApi';
 import { ApiError } from '../../lib/httpClient';
 
@@ -25,10 +26,10 @@ export const QuestionsPage = () => {
       </header>
 
       {error && <p className="text-status-error">{error}</p>}
-      {!error && !years && <p className="text-content-secondary">Carregando provas...</p>}
+      {!error && !years && <ListSkeleton rows={3} />}
 
       {years && (
-        <ul className="grid gap-4 md:grid-cols-3">
+        <ul className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           {years.map((year) => (
             <li key={year} className="flex items-center justify-between rounded-card bg-brand-card p-4">
               <span className="font-semibold">ENEM {year}</span>

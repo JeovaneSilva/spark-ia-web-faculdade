@@ -1,5 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { BrainCircuit, Check, Loader2, MessageSquareText, Pencil, Plus, Send, Trash2, User, X } from 'lucide-react';
+import { Logo } from '../../components/ui/Logo';
+import { GeneratingStatus } from './GeneratingStatus';
+import { Check, Loader2, MessageSquareText, Pencil, Plus, Send, Trash2, User, X } from 'lucide-react';
 import {
   deleteChatbotSession,
   generateQuestions,
@@ -82,8 +84,9 @@ export const ChatbotPage = () => {
         const nextSessions = apiSessions.map(toChatSession);
         setSessions(nextSessions);
 
-        if (nextSessions.length > 0 && !activeSessionId) {
-          setActiveSessionId(nextSessions[0].id);
+        // só escolhe a primeira conversa se o usuário ainda não escolheu nenhuma
+        if (nextSessions.length > 0) {
+          setActiveSessionId((current) => current ?? nextSessions[0].id);
         }
       } catch {
         if (!isMounted) return;
@@ -240,7 +243,33 @@ export const ChatbotPage = () => {
   };
 
   return (
-    <div className="flex h-[calc(100dvh-5rem)] min-h-0 w-full gap-3 overflow-hidden sm:gap-4 md:h-[calc(100vh-9rem)]">
+    <div className="flex h-[calc(100dvh-5rem)] min-h-0 w-full flex-col gap-3 overflow-hidden sm:gap-4 md:h-[calc(100vh-9rem)] md:flex-row">
+      <div className="flex items-center gap-2 md:hidden">
+        <select
+          value={activeSessionId ?? ''}
+          onChange={(event) => setActiveSessionId(event.target.value)}
+          aria-label="Escolher conversa"
+          className="min-w-0 flex-1 rounded-input border border-white/10 bg-brand-sidebar px-3 py-2 text-sm text-content-primary focus:border-brand-cyan focus:outline-none"
+        >
+          {!activeSessionId && <option value="">Nova conversa</option>}
+          {[...sessions]
+            .sort((a, b) => b.updatedAt - a.updatedAt)
+            .map((session) => (
+              <option key={session.id} value={session.id}>
+                {session.title || 'Nova conversa'}
+              </option>
+            ))}
+        </select>
+        <button
+          type="button"
+          onClick={createNewConversation}
+          aria-label="Nova conversa"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-input bg-brand-sidebar text-content-secondary transition-colors hover:text-white"
+        >
+          <Plus size={18} />
+        </button>
+      </div>
+
       <aside className="hidden w-72 min-h-0 flex-col gap-2 overflow-hidden rounded-card bg-brand-sidebar p-4 md:flex">
         <button
           onClick={createNewConversation}
@@ -357,7 +386,7 @@ export const ChatbotPage = () => {
         <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
           {conversation.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-2 text-center text-content-secondary">
-              <BrainCircuit size={48} className="text-brand-cyan" />
+              <Logo className="h-20" />
               <p className="text-xl font-semibold text-content-primary">Como posso te ajudar hoje?</p>
               <p className="max-w-sm text-sm">
                 Cole um texto, um link de conteúdo educacional, ou só descreva um tema — eu identifico a
@@ -372,24 +401,18 @@ export const ChatbotPage = () => {
                   <div key={message.id} className={`flex items-start gap-3 ${isUser ? 'flex-row-reverse' : ''}`}>
                     <div
                       className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                        isUser ? 'bg-brand-orange/15 text-brand-orange' : 'bg-brand-cyan/15 text-brand-cyan'
+                        isUser ? 'bg-brand-orange/15 text-brand-orange' : 'bg-brand-sidebar'
                       }`}
                     >
-                      {isUser ? <User size={16} /> : <BrainCircuit size={16} />}
+                      {isUser ? <User size={16} /> : <Logo className="h-5" />}
                     </div>
 
                     <div
                       className={`flex min-w-0 flex-col gap-1 ${isUser ? 'items-end' : 'items-start'} ${
-                        message.kind === 'questions' ? 'w-full' : 'max-w-[75%]'
+                        message.kind === 'questions' ? 'w-full' : 'max-w-[85%] sm:max-w-[75%]'
                       }`}
                     >
-                      {message.kind === 'loading' && (
-                        <div className="flex items-center gap-1.5 rounded-card rounded-tl-sm bg-brand-sidebar px-4 py-3.5">
-                          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-content-disabled [animation-delay:-0.3s]" />
-                          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-content-disabled [animation-delay:-0.15s]" />
-                          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-content-disabled" />
-                        </div>
-                      )}
+                      {message.kind === 'loading' && <GeneratingStatus />}
 
                       {message.kind === 'text' && (
                         <p

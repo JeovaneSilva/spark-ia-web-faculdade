@@ -1,6 +1,7 @@
 import { ScrollReveal } from "../../components/ui/ScrollReveal";
 import { SectionFade } from "../../components/ui/SectionFade";
 import whiteLogo from "../../assets/images/whiteLogo.png";
+import { Logo } from "../../components/ui/Logo";
 import uninassaulogo from "../../assets/images/uninassaulogo.svg";
 
 type IdentityCard = {
@@ -81,7 +82,9 @@ export const AboutSection = () => {
               >
                 {card.isImageCard ? (
                   <div className="flex h-20 w-full flex-col items-center justify-center gap-2">
-                    {card.image ? (
+                    {card.image === whiteLogo ? (
+                      <Logo className="h-12" />
+                    ) : card.image ? (
                       <img
                         src={card.image}
                         alt={card.title || card.subtitle}

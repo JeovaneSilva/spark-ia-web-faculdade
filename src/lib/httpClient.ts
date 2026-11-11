@@ -52,7 +52,11 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
   });
 
   if (!response.ok) {
-    const message = errorMessages[response.status] ?? (await parseErrorMessage(response, fallbackErrorMessage));
+    // 429: limite de requisições da API (rotas de IA e login são as mais restritas)
+    const tooManyRequests = 'Muitas tentativas em pouco tempo. Aguarde um instante e tente de novo.';
+    const message =
+      errorMessages[response.status] ??
+      (response.status === 429 ? tooManyRequests : await parseErrorMessage(response, fallbackErrorMessage));
     throw new ApiError(message, response.status);
   }
 

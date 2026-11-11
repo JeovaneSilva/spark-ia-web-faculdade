@@ -15,9 +15,14 @@ import { FlashcardFormPage } from "./features/flashcards/FlashcardFormPage";
 import { QuestionsPage } from "./features/questions/QuestionsPage";
 import { QuestionDetailPage } from "./features/questions/QuestionDetailPage";
 import { NotFoundPage } from "./features/errors/NotFoundPage";
+import { ToastProvider } from "./components/ui/ToastProvider";
+import { FlashcardsLibraryPage } from "./features/flashcards/FlashcardsLibraryPage";
+import { SimuladoSetupPage } from "./features/simulado/SimuladoSetupPage";
+import { SimuladoPage } from "./features/simulado/SimuladoPage";
 
 function App() {
   return (
+    <ToastProvider>
     <AuthProvider>
       <Routes>
         <Route
@@ -57,17 +62,30 @@ function App() {
           <Route index element={<DashboardHomePage />} />
           <Route path="chatbot" element={<ChatbotPage />} />
           <Route path="flashcards" element={<FlashcardsPage />} />
+          <Route path="flashcards/todos" element={<FlashcardsLibraryPage />} />
           <Route path="flashcards/novo" element={<FlashcardFormPage />} />
           <Route path="flashcards/iniciar" element={<FlashcardSessionSetupPage />} />
           <Route path="flashcards/sessao" element={<FlashcardSessionPage />} />
           <Route path="flashcards/:id/editar" element={<FlashcardFormPage />} />
+          <Route path="simulado" element={<SimuladoSetupPage />} />
           <Route path="questoes" element={<QuestionsPage />} />
           <Route path="questoes/:prova/:questao" element={<QuestionDetailPage />} />
         </Route>
 
+        {/* A prova fica fora do painel: em tela cheia não há menu nem links. */}
+        <Route
+          path="/simulado/prova"
+          element={
+            <RequireAuth>
+              <SimuladoPage />
+            </RequireAuth>
+          }
+        />
+
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </AuthProvider>
+    </ToastProvider>
   );
 }
 

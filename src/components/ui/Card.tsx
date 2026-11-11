@@ -15,7 +15,7 @@ export const Card = ({ children, title, className = '', variant = 'default' }: C
   };
 
   return (
-    <div className={`${variants[variant]} p-6 rounded-card shadow-card transition-all ${className}`}>
+    <div className={`${variants[variant]} p-4 sm:p-6 rounded-card shadow-card ${className}`}>
       {title && <h3 className="mb-4">{title}</h3>}
       {children}
     </div>

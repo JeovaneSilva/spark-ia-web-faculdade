@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, Plus, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Plus } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
+import { ListSkeleton } from '../../components/ui/Skeleton';
 import { Card } from '../../components/ui/Card';
 import { StudyCard } from './StudyCard';
+import { SessionSummary, type SessionStats } from './SessionSummary';
 import { findSubjectBySlug, findSubjectByValue } from '../../lib/subjects';
 import {
   deleteFlashcard,
+  isCardDue,
   listFlashcards,
   reviewFlashcard,
   type Flashcard,
@@ -23,10 +26,10 @@ function shuffle<T>(items: T[]): T[] {
   return result;
 }
 
-interface SessionStats {
-  correct: number;
-  incorrect: number;
-  byDifficulty: Record<ReviewDifficulty, number>;
+// Revisão espaçada: os pendentes vêm primeiro (embaralhados entre si), depois
+// os que ainda não venceram.
+function orderForStudy(cards: Flashcard[]): Flashcard[] {
+  return [...shuffle(cards.filter(isCardDue)), ...shuffle(cards.filter((card) => !isCardDue(card)))];
 }
 
 const EMPTY_STATS: SessionStats = { correct: 0, incorrect: 0, byDifficulty: { EASY: 0, MEDIUM: 0, HARD: 0 } };
@@ -35,8 +38,12 @@ export const FlashcardSessionPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const materiasParam = searchParams.get('materias') ?? '';
+  const onlyDue = searchParams.get('pendentes') === '1';
 
   const [queue, setQueue] = useState<Flashcard[] | null>(null);
+  // Todos os cartões das disciplinas escolhidas (a fila pode ser só os errados).
+  const [allCards, setAllCards] = useState<Flashcard[]>([]);
+  const [missed, setMissed] = useState<Flashcard[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
@@ -55,7 +62,11 @@ export const FlashcardSessionPage = () => {
         const values = new Set(
           selectedSlugs.map((slug) => findSubjectBySlug(slug)?.value).filter((v): v is string => Boolean(v)),
         );
-        setQueue(shuffle(all.filter((card) => values.has(card.subject))));
+        const selected = all.filter(
+          (card) => values.has(card.subject) && (!onlyDue || isCardDue(card)),
+        );
+        setAllCards(selected);
+        setQueue(orderForStudy(selected));
       })
       .catch((err) => {
         if (!cancelled) setError(err instanceof ApiError ? err.message : 'Não foi possível carregar os flashcards.');
@@ -65,15 +76,16 @@ export const FlashcardSessionPage = () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [materiasParam]);
+  }, [materiasParam, onlyDue]);
 
   const card = queue?.[currentIndex];
 
-  const restart = () => {
-    setQueue((prev) => (prev ? shuffle(prev) : prev));
+  const restart = (cards: Flashcard[]) => {
+    setQueue(shuffle(cards));
     setCurrentIndex(0);
     setShowAnswer(false);
     setStats(EMPTY_STATS);
+    setMissed([]);
     setFinished(false);
   };
 
@@ -83,6 +95,7 @@ export const FlashcardSessionPage = () => {
     setError(null);
     try {
       await reviewFlashcard(card.id_flashcard, difficulty, isCorrect);
+      if (!isCorrect) setMissed((prev) => [...prev, card]);
       setStats((prev) => ({
         correct: prev.correct + (isCorrect ? 1 : 0),
         incorrect: prev.incorrect + (isCorrect ? 0 : 1),
@@ -109,6 +122,8 @@ export const FlashcardSessionPage = () => {
       await deleteFlashcard(card.id_flashcard);
       const remaining = queue.filter((item) => item.id_flashcard !== card.id_flashcard);
       setQueue(remaining);
+      setAllCards((prev) => prev.filter((item) => item.id_flashcard !== card.id_flashcard));
+      setMissed((prev) => prev.filter((item) => item.id_flashcard !== card.id_flashcard));
       setShowAnswer(false);
       if (remaining.length === 0) {
         setFinished(true);
@@ -122,7 +137,6 @@ export const FlashcardSessionPage = () => {
     }
   };
 
-  const totalReviewed = stats.correct + stats.incorrect;
   const showSubjectBadge = selectedSlugs.length > 1;
 
   return (
@@ -155,11 +169,15 @@ export const FlashcardSessionPage = () => {
 
       {error && <p className="text-status-error">{error}</p>}
 
-      {!error && !queue && <p className="text-content-secondary">Carregando...</p>}
+      {!error && !queue && <ListSkeleton rows={3} />}
 
       {queue && queue.length === 0 && !finished && (
         <Card>
-          <p className="text-content-secondary">Nenhum flashcard encontrado nas disciplinas selecionadas.</p>
+          <p className="text-content-secondary">
+            {onlyDue
+              ? 'Nenhum cartão pendente de revisão nas disciplinas selecionadas. Volte mais tarde ou estude tudo.'
+              : 'Nenhum flashcard encontrado nas disciplinas selecionadas.'}
+          </p>
           <Button variant="primary" className="mt-4 w-fit" onClick={() => navigate('/app/flashcards/iniciar')}>
             Escolher outras disciplinas
           </Button>
@@ -167,40 +185,15 @@ export const FlashcardSessionPage = () => {
       )}
 
       {finished && (
-        <Card>
-          <div className="flex flex-col items-center gap-4 text-center">
-            <CheckCircle2 size={40} className="text-status-success" />
-            <div>
-              <h2>Sessão concluída!</h2>
-              <p className="text-content-secondary">Você revisou {totalReviewed} cartões.</p>
-            </div>
-            <div className="flex gap-6 text-lg font-semibold">
-              <span className="text-status-success">Acertos: {stats.correct}</span>
-              <span className="text-status-error">Erros: {stats.incorrect}</span>
-            </div>
-            {stats.correct > 0 && (
-              <div className="flex gap-6 text-sm text-content-secondary">
-                <span>Fácil: {stats.byDifficulty.EASY}</span>
-                <span>Médio: {stats.byDifficulty.MEDIUM}</span>
-                <span>Difícil: {stats.byDifficulty.HARD}</span>
-              </div>
-            )}
-            <div className="flex flex-wrap justify-center gap-3">
-              {queue && queue.length > 0 && (
-                <Button variant="outline" onClick={restart}>
-                  <RotateCcw size={16} />
-                  Estudar de novo
-                </Button>
-              )}
-              <Button variant="outline" onClick={() => navigate('/app/flashcards/iniciar')}>
-                Escolher outras disciplinas
-              </Button>
-              <Button variant="primary" onClick={() => navigate('/app/flashcards')}>
-                Voltar para disciplinas
-              </Button>
-            </div>
-          </div>
-        </Card>
+        <SessionSummary
+          stats={stats}
+          missed={missed}
+          hasCards={allCards.length > 0}
+          onRestartAll={() => restart(allCards)}
+          onRestartMissed={() => restart(missed)}
+          onChooseSubjects={() => navigate('/app/flashcards/iniciar')}
+          onBack={() => navigate('/app/flashcards')}
+        />
       )}
 
       {!finished && card && (
@@ -210,7 +203,7 @@ export const FlashcardSessionPage = () => {
           subjectLabel={showSubjectBadge ? findSubjectByValue(card.subject)?.label : undefined}
           showAnswer={showAnswer}
           isBusy={isBusy}
-          onShowAnswer={() => setShowAnswer(true)}
+          onToggleAnswer={() => setShowAnswer((value) => !value)}
           onReview={handleReview}
           onEdit={() => navigate(`/app/flashcards/${card.id_flashcard}/editar`)}
           onDelete={handleDelete}

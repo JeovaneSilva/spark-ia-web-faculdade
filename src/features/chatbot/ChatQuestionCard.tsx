@@ -1,8 +1,11 @@
 import { useState } from 'react';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import { CheckCircle2, Layers, XCircle } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
+import { useToast } from '../../components/ui/useToast';
+import { createFlashcard } from '../flashcards/flashcardsApi';
+import { MistakeExplainer } from '../questions/MistakeExplainer';
 import { submitAnswer, type AnswerOption, type AnswerResult } from '../questions/questionsApi';
-import type { GeneratedQuestion } from './chatbotApi';
+import { requestFlashcardDraft, type FlashcardDraft, type GeneratedQuestion } from './chatbotApi';
 import { findSubjectByValue } from '../../lib/subjects';
 import { ApiError } from '../../lib/httpClient';
 
@@ -22,6 +25,9 @@ export const ChatQuestionCard = ({ question }: { question: GeneratedQuestion }) 
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
+  const [isSavingCard, setIsSavingCard] = useState(false);
+  const [savedCard, setSavedCard] = useState<FlashcardDraft | null>(null);
 
   const alternatives: Record<AnswerOption, string> = {
     A: question.optionA,
@@ -29,6 +35,24 @@ export const ChatQuestionCard = ({ question }: { question: GeneratedQuestion }) 
     C: question.optionC,
     D: question.optionD,
     E: question.optionE,
+  };
+
+  // A IA condensa a questão em pergunta curta + resposta objetiva (o enunciado
+  // e as alternativas não viram flashcard).
+  const handleSaveFlashcard = async () => {
+    if (!result) return;
+    setIsSavingCard(true);
+    setError(null);
+    try {
+      const draft = await requestFlashcardDraft(question.id_question);
+      await createFlashcard(draft);
+      setSavedCard(draft);
+      toast.success('Flashcard criado a partir da questão.');
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Não foi possível salvar o flashcard.');
+    } finally {
+      setIsSavingCard(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -112,6 +136,28 @@ export const ChatQuestionCard = ({ question }: { question: GeneratedQuestion }) 
             <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-content-secondary">
               {result.explanation}
             </p>
+          )}
+          {!result.isCorrect && <MistakeExplainer questionId={question.id_question} />}
+          {question.subject && !savedCard && (
+            <Button
+              variant="outline"
+              className="mt-2 w-fit px-4 py-2 text-sm"
+              disabled={isSavingCard}
+              onClick={handleSaveFlashcard}
+            >
+              <Layers size={16} />
+              {isSavingCard ? 'Criando flashcard...' : 'Criar flashcard'}
+            </Button>
+          )}
+          {savedCard && (
+            <div className="mt-2 flex flex-col gap-1 rounded-input border border-status-success/40 bg-status-success/10 p-3 text-sm">
+              <span className="flex items-center gap-2 font-semibold text-status-success">
+                <CheckCircle2 size={16} />
+                Flashcard criado
+              </span>
+              <p className="break-words font-medium">{savedCard.question}</p>
+              <p className="break-words text-content-secondary">{savedCard.answer}</p>
+            </div>
           )}
         </div>
       )}
